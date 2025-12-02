@@ -57,6 +57,58 @@ function listDatabases(config) {
   }
 }
 
+// History functions
+function loadHistory() {
+  if (fs.existsSync(HISTORY_PATH)) {
+    return JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8'));
+  }
+  return [];
+}
+
+function saveHistory(history) {
+  fs.writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 2));
+}
+
+function addToHistory(db, sql, env) {
+  const history = loadHistory();
+  history.unshift({
+    timestamp: new Date().toISOString(),
+    db: db || 'env',
+    sql,
+    env: env || 'local'
+  });
+  // Keep only last MAX_HISTORY entries
+  saveHistory(history.slice(0, MAX_HISTORY));
+}
+
+function showHistory() {
+  const history = loadHistory();
+  if (history.length === 0) {
+    console.log('No query history.');
+    return;
+  }
+  console.log('Recent queries:\n');
+  history.forEach((entry, i) => {
+    const date = new Date(entry.timestamp).toLocaleString();
+    const sqlPreview = entry.sql.length > 60 ? entry.sql.substring(0, 60) + '...' : entry.sql;
+    console.log(`  ${i + 1}. [${entry.db}] ${sqlPreview}`);
+    console.log(`     ${date} (${entry.env})`);
+  });
+}
+
+function getHistoryEntry(n) {
+  const history = loadHistory();
+  if (n < 1 || n > history.length) {
+    return null;
+  }
+  return history[n - 1];
+}
+
+function clearHistory() {
+  saveHistory([]);
+  console.log('History cleared.');
+}
+
 function showHelp() {
   console.log('Usage: db-query [options] "SQL_QUERY"');
   console.log('');
