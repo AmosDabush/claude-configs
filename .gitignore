@@ -3,6 +3,9 @@ db-credentials.env
 *.env
 db-config.md
 
+# Node modules
+node_modules/
+
 # Claude runtime data
 history.jsonl
 debug/

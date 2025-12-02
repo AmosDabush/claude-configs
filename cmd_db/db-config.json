@@ -1,0 +1,39 @@
+{
+  "credentialsFile": "~/.claude/db-credentials.env",
+  "connections": {
+    "coview-dev": {
+      "hostVar": "DEV_POSTGRES_HOST",
+      "userVar": "DEV_POSTGRES_USER",
+      "passwordVar": "DEV_POSTGRES_PASSWORD",
+      "port": 5432
+    },
+    "coview-naharia": {
+      "hostVar": "QA_POSTGRES_HOST",
+      "userVar": "QA_POSTGRES_USER",
+      "passwordVar": "QA_POSTGRES_PASSWORD",
+      "port": 5432
+    }
+  },
+  "databases": {
+    "dev": {
+      "extends": "coview-dev",
+      "description": "Development database",
+      "dbName": "coview"
+    },
+    "lior_test2": {
+      "extends": "coview-dev",
+      "description": "Lior's test database 2",
+      "dbName": "lior_test2"
+    },
+    "lior_test": {
+      "extends": "coview-dev",
+      "description": "Lior's test database",
+      "dbName": "lior_test"
+    },
+    "qa_naharia": {
+      "extends": "coview-naharia",
+      "description": "QA/Naharia database",
+      "dbName": "coview"
+    }
+  }
+}
