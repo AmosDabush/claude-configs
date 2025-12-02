@@ -1,0 +1,18 @@
+# Sensitive files - DO NOT COMMIT
+db-credentials.env
+*.env
+db-config.md
+
+# Claude runtime data
+history.jsonl
+debug/
+file-history/
+plans/
+projects/
+session-env/
+shell-snapshots/
+todos/
+downloads/
+statsig/
+ide/
+settings.local.json
