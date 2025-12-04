@@ -1,4 +1,40 @@
-# Global Configuration
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Quick Commands
+
+| Command | Description |
+|---------|-------------|
+| `/db` | Switch database, run queries interactively |
+| `/db-agent` | Natural language database queries and operations |
+| `/claude-git-sync` | Sync ~/.claude configs to git repo |
+
+## Available Databases
+
+| Name | Description | DB Name |
+|------|-------------|---------|
+| dev | Development | coview |
+| lior_test | Lior's test DB | lior_test |
+| lior_test2 | Lior's test DB 2 | lior_test2 |
+| qa_naharia | QA/Naharia | coview |
+
+## Database Query Examples
+
+```bash
+# Query with specific database
+node ~/.claude/cmd_db/db-query.js --db dev "SELECT * FROM patients.patients LIMIT 5"
+
+# Schema exploration
+node ~/.claude/cmd_db/db-query.js --db dev --tables
+node ~/.claude/cmd_db/db-query.js --db dev --schemas
+node ~/.claude/cmd_db/db-query.js --db dev --describe patients.cases
+
+# Query history
+node ~/.claude/cmd_db/db-query.js --history
+node ~/.claude/cmd_db/db-query.js --run 1
+node ~/.claude/cmd_db/db-query.js --clear-history
+```
 
 ## Database Access
 

@@ -109,6 +109,35 @@ function clearHistory() {
   console.log('History cleared.');
 }
 
+// Schema helper SQL queries
+const SCHEMA_QUERIES = {
+  tables: `
+    SELECT table_schema || '.' || table_name as table_name
+    FROM information_schema.tables
+    WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+    ORDER BY table_schema, table_name
+  `,
+  schemas: `
+    SELECT schema_name
+    FROM information_schema.schemata
+    WHERE schema_name NOT IN ('pg_catalog', 'information_schema')
+      AND schema_name NOT LIKE 'pg_temp%'
+      AND schema_name NOT LIKE 'pg_toast%'
+    ORDER BY schema_name
+  `,
+  describe: (table) => {
+    const parts = table.includes('.') ? table.split('.') : [null, table];
+    const schemaCondition = parts[0] ? `AND table_schema = '${parts[0]}'` : '';
+    const tableName = parts[1] || parts[0];
+    return `
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns
+      WHERE table_name = '${tableName}' ${schemaCondition}
+      ORDER BY ordinal_position
+    `;
+  }
+};
+
 function showHelp() {
   console.log('Usage: db-query [options] "SQL_QUERY"');
   console.log('');
@@ -119,10 +148,21 @@ function showHelp() {
   console.log('  --list            List available databases');
   console.log('  --help, -h        Show this help');
   console.log('');
+  console.log('History:');
+  console.log('  --history, -H     Show recent queries');
+  console.log('  --run <n>         Re-run query #n from history');
+  console.log('  --clear-history   Clear query history');
+  console.log('');
+  console.log('Schema:');
+  console.log('  --tables          List all tables');
+  console.log('  --schemas         List all schemas');
+  console.log('  --describe, -d <table>  Describe table columns');
+  console.log('');
   console.log('Examples:');
   console.log('  db-query --db dev "SELECT * FROM patients.patients LIMIT 5"');
-  console.log('  db-query --db dev --global "SELECT * FROM patients.patients LIMIT 5"');
-  console.log('  db-query --local "SELECT * FROM patients.patients LIMIT 5"  # uses project .env');
+  console.log('  db-query --db dev --tables');
+  console.log('  db-query --db dev --describe patients.patients');
+  console.log('  db-query --run 1   # Re-run last query');
 }
 
 async function main() {
@@ -134,14 +174,27 @@ async function main() {
   const useGlobalEnv = args.includes('--global') || args.includes('-g');
   // Local is default, --local flag is just for explicitness
 
+  // History flags
+  const historyFlag = args.includes('--history') || args.includes('-H');
+  const clearHistoryFlag = args.includes('--clear-history');
+  const runFlagIndex = args.indexOf('--run');
+  const runNumber = runFlagIndex !== -1 ? parseInt(args[runFlagIndex + 1]) : null;
+
+  // Schema flags
+  const tablesFlag = args.includes('--tables');
+  const schemasFlag = args.includes('--schemas');
+  const describeFlagIndex = args.findIndex(a => a === '--describe' || a === '-d');
+  const describeTable = describeFlagIndex !== -1 ? args[describeFlagIndex + 1] : null;
+
   // Get --db value
   const dbFlagIndex = args.indexOf('--db');
   const dbName = dbFlagIndex !== -1 ? args[dbFlagIndex + 1] : null;
 
   // Get SQL query (first arg that doesn't start with - and isn't a flag value)
+  const flagsWithValues = ['--db', '--run', '--describe', '-d'];
   const sql = args.find((arg, i) => {
     if (arg.startsWith('-')) return false;
-    if (i > 0 && args[i - 1] === '--db') return false;
+    if (i > 0 && flagsWithValues.includes(args[i - 1])) return false;
     return true;
   });
 
@@ -157,7 +210,37 @@ async function main() {
     process.exit(0);
   }
 
-  if (!sql) {
+  // Handle history commands
+  if (historyFlag) {
+    showHistory();
+    process.exit(0);
+  }
+
+  if (clearHistoryFlag) {
+    clearHistory();
+    process.exit(0);
+  }
+
+  // Determine final SQL (from arg or history)
+  let finalSql = sql;
+  let historyEntry = null;
+
+  if (runNumber) {
+    historyEntry = getHistoryEntry(runNumber);
+    if (!historyEntry) {
+      console.error(`Query #${runNumber} not found in history.`);
+      process.exit(1);
+    }
+    finalSql = historyEntry.sql;
+    console.log(`Re-running query #${runNumber}: ${finalSql.substring(0, 50)}...`);
+  }
+
+  // Handle schema helpers
+  if (tablesFlag) finalSql = SCHEMA_QUERIES.tables;
+  if (schemasFlag) finalSql = SCHEMA_QUERIES.schemas;
+  if (describeTable) finalSql = SCHEMA_QUERIES.describe(describeTable);
+
+  if (!finalSql) {
     showHelp();
     process.exit(1);
   }
@@ -223,8 +306,13 @@ async function main() {
       logging: false,
     });
 
-    const [results] = await sequelize.query(sql);
+    const [results] = await sequelize.query(finalSql);
     console.log(JSON.stringify(results, null, 2));
+
+    // Save to history (skip schema helper queries)
+    if (!tablesFlag && !schemasFlag && !describeTable) {
+      addToHistory(dbName, finalSql, useGlobalEnv ? 'global' : 'local');
+    }
 
     await sequelize.close();
     process.exit(0);
