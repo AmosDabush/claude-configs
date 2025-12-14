@@ -11,10 +11,12 @@ description: "Database expert for coview-cloud hospital management system. Knows
 
 **Correct behavior:**
 1. User asks CoView question → Invoke `Skill(coview-db-expert)`
-2. Read this SKILL.md → Check Quick Reference first
-3. If Quick Reference answers it → respond directly
-4. If not → search reference files or query database
+2. Read this SKILL.md → Check **Quick Reference** AND **Learned Knowledge section** (at bottom)
+3. If found in either section → respond directly (NO searching needed!)
+4. If not found → search reference files or query database
 5. **MANDATORY: After answering, UPDATE this SKILL.md with learned knowledge** (see Self-Learning Protocol below)
+
+**CRITICAL: Check Learned Knowledge section (line ~395) BEFORE searching files!**
 
 **Incorrect behavior:**
 - Searching `~/.claude/skills/coview-db-expert/` files directly
@@ -67,6 +69,8 @@ Activate when user asks about:
 | condition | patients | Patient condition/ventilation | case_id |
 | cards_agg | patients | Pre-aggregated patient cards | (bed_id, room_id) |
 | parameters | common | System configuration | param_id |
+| permissions_chameleon | common | User→ward access control (synced from Chameleon) | id |
+| user_chameleon | common | User profile data from Chameleon (fullName, userDesc, sector) | user_name |
 
 ### Copy Table Pattern (All 29 Services)
 
@@ -226,6 +230,9 @@ This is **FULL REPLACEMENT** - no incremental updates. All services use this pat
 | FULL vs DELTA aggregation | Cases/Locations/Wards trigger FULL; 21 other topics trigger DELTA |
 | IS DISTINCT FROM | NULL-safe comparison used in delta queries |
 | MongoDB usage | Only ambulance service (amb_patients, amb_drives) |
+| Event types (nursing schema) | `nursing.event_type` hierarchical: קטגוריה→סוג אירוע→נושא. Root: רוחבי (ward-level), מטופל (patient-specific) |
+| permissions_chameleon usage | User→ward access control. Used by common-service for ward filtering, access-control for user profile |
+| user_chameleon usage | User profile from Chameleon (fullName, userDesc, sector). Used by access-control for profile enrichment |
 
 ### Aggregation Triggers
 
@@ -271,7 +278,10 @@ This is **FULL REPLACEMENT** - no incremental updates. All services use this pat
 
 ## Instructions for Claude
 
-### Simple Questions → Answer from Quick Reference above
+### Simple Questions → Answer from Quick Reference above OR Learned Knowledge section below
+
+**BEFORE SEARCHING FILES:** Scroll down and check the "Learned Knowledge" section (~line 400) for previously discovered answers!
+
 - "What schema has lab tables?" → labs schema (6 tables)
 - "What is the copy table pattern?" → TRUNCATE → INSERT → SWAP
 - "What defines a panic result?" → abnormal IN ('HH', 'LL')
@@ -280,6 +290,8 @@ This is **FULL REPLACEMENT** - no incremental updates. All services use this pat
 - "What is NO_CASE?" → Synthetic case_id for empty beds
 - "What validation does nursing-status use?" → Soft (insert anyway, log error)
 - "Where are parameters stored?" → common.parameters table
+- "What are event types in nursing schema?" → Check Learned Knowledge OR Common Operational Answers table
+- "What is permissions_chameleon for?" → Check Key Tables Detail OR Common Operational Answers table
 
 ### Detailed Questions → Read reference file
 - "Explain similar name detection in detail" → Read `references/operational-behavior.md`
@@ -419,6 +431,9 @@ Track what was learned and when. Claude adds entries here after learning.
 
 | Date | What was learned | Source | Added by |
 |------|------------------|--------|----------|
+| 2024-12-14 | FIX: Added "Check Learned Knowledge section" to instruction flow | User feedback | Claude |
+| 2024-12-14 | Promoted permissions_chameleon/user_chameleon to Quick Reference tables | Learning consolidation | Claude |
+| 2024-12-14 | Promoted event_types to Common Operational Answers | Learning consolidation | Claude |
 | 2024-12-14 | Event types hierarchy in nursing schema | DB query | Claude |
 | 2024-12-14 | permissions_chameleon & user_chameleon purpose | Code analysis | Claude |
 | 2024-12-14 | Initial skill structure created | Manual | User |
