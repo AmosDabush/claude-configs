@@ -2,6 +2,36 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## Skills (Domain Knowledge)
+
+### coview-db-expert
+**Location:** `~/.claude/skills/coview-db-expert/SKILL.md`
+
+Database expert for coview-cloud hospital management system. Knows 138 tables, 29 backend services, 2830 Q&A about operational behavior, copy table patterns, and domain terminology.
+
+**IMPORTANT: Skill Invocation Rule**
+When user asks about CoView database topics, you MUST:
+1. Invoke `Skill(coview-db-expert)` FIRST
+2. Use the Quick Reference in SKILL.md to answer
+3. Only read reference files if Quick Reference doesn't cover it
+
+**DO NOT** search skill files directly with Grep/Read without invoking the skill first.
+
+**Activate when user asks about:**
+- CoView database tables, schemas, columns, parameters
+- Backend services (what they do, what tables they update, validation)
+- Operational behavior (similar names, discharge, ventilation, aggregation)
+- Domain terms (satellite patient, ARAN, copy tables, Chameleon, NO_CASE)
+- Model associations, data flow, Redis topics
+
+**Self-Learning:** After searching reference files for an answer, Claude should add key insights back to SKILL.md Quick Reference or Learned Knowledge section. This makes the skill smarter over time.
+
+**Discovery Mode:** If answer not found in skill files, Claude will ASK if you want to explore the database/codebase. If confirmed, Claude discovers the answer and adds it to the skill.
+
+---
+
 ## Quick Commands
 
 | Command | Description |

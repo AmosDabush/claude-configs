@@ -40,6 +40,13 @@ if [ -d "$CLAUDE_DIR/agents" ]; then
     echo "✓ agents/"
 fi
 
+# Sync skills/ if exists
+if [ -d "$CLAUDE_DIR/skills" ]; then
+    mkdir -p "$REPO_DIR/skills"
+    rsync -a "$CLAUDE_DIR/skills/" "$REPO_DIR/skills/"
+    echo "✓ skills/"
+fi
+
 # Sync settings.json (not settings.local.json)
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
     cp "$CLAUDE_DIR/settings.json" "$REPO_DIR/"

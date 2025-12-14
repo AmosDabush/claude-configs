@@ -1,122 +1,122 @@
 [
   {
-    "timestamp": "2025-12-04T11:39:50.330Z",
+    "timestamp": "2025-12-14T15:55:22.095Z",
     "db": "dev",
-    "sql": "\nINSERT INTO patients.indications (case_id, indication_interface_id, indication_status_id, indication_type_id, indication_type_desc, indication_start_date, service_group_desc, requesting_unit, cnf_time, dne_time)\nVALUES \n  -- Case 90001: CT ordered (CNF)\n  (90001, 'IND-90001-CT-1', 'CNF', 'CT', 'CT', NOW() - INTERVAL '1 hour', 'CT בטן', 'מיון פנימי', NOW() - INTERVAL '1 hour', NULL),\n  \n  -- Case 90001: US scheduled (SCH)\n  (90001, 'IND-90001-US-1', 'SCH', 'US', 'US', NOW() + INTERVAL '2 hours', 'אולטרסאונד בטן', 'מיון פנימי', NOW() - INTERVAL '30 minutes', NULL),\n  \n  -- Case 90002: CT done (DNE)\n  (90002, 'IND-90002-CT-1', 'DNE', 'CT', 'CT', NOW() - INTERVAL '3 hours', 'CT חזה', 'מיון כירורגי', NOW() - INTERVAL '4 hours', NOW() - INTERVAL '3 hours'),\n  \n  -- Case 90002: Xray in progress (IP)\n  (90002, 'IND-90002-XR-1', 'IP', 'XRAY', 'XRAY', NOW() - INTERVAL '2 hours', 'צילום חזה', 'מיון כירורגי', NOW() - INTERVAL '3 hours', NOW() - INTERVAL '2 hours'),\n  \n  -- Case 90003: CT ordered (CNF)\n  (90003, 'IND-90003-CT-1', 'CNF', 'CT', 'CT', NOW() - INTERVAL '30 minutes', 'CT ראש', 'מיון אורטופדי', NOW() - INTERVAL '30 minutes', NULL),\n  \n  -- Case 90003: US done and decoded (FR)\n  (90003, 'IND-90003-US-1', 'FR', 'US', 'US', NOW() - INTERVAL '5 hours', 'אולטרסאונד', 'מיון אורטופדי', NOW() - INTERVAL '6 hours', NOW() - INTERVAL '5 hours')\n\nON CONFLICT (case_id, indication_interface_id, indication_start_date) DO UPDATE SET\n  indication_status_id = EXCLUDED.indication_status_id,\n  cnf_time = EXCLUDED.cnf_time,\n  dne_time = EXCLUDED.dne_time\nRETURNING case_id, indication_interface_id, indication_status_id, indication_type_desc, indication_start_date\n",
+    "sql": "SELECT COUNT(*) as count FROM \"common\".\"permissions_chameleon\"",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:39:37.512Z",
+    "timestamp": "2025-12-14T15:55:19.693Z",
     "db": "dev",
-    "sql": "\nINSERT INTO patients.cases (case_id, patient_id, mabar_code, admission_date, is_active)\nVALUES \n  (90001, 2002, 'רמי-פנימ', NOW() - INTERVAL '2 hours', true),\n  (90002, 999001, 'רמי-כיר', NOW() - INTERVAL '3 hours', true),\n  (90003, 7001, 'רמי-אורט', NOW() - INTERVAL '1 hour', true)\nON CONFLICT (case_id) DO UPDATE SET \n  mabar_code = EXCLUDED.mabar_code,\n  admission_date = EXCLUDED.admission_date,\n  is_active = EXCLUDED.is_active\nRETURNING case_id, mabar_code, admission_date\n",
+    "sql": "SELECT COUNT(*) as count FROM \"common\".\"user_chameleon\"",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:39:27.353Z",
+    "timestamp": "2025-12-14T15:55:16.107Z",
     "db": "dev",
-    "sql": "SELECT patient_id FROM patients.patients LIMIT 3",
+    "sql": "SELECT * FROM \"common\".\"permission_groups\" LIMIT 10",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:38:39.851Z",
+    "timestamp": "2025-12-14T15:54:57.282Z",
     "db": "dev",
-    "sql": "SELECT param_value FROM common.parameters WHERE param_name = 'GeneralER_Dept'",
+    "sql": "SELECT * FROM \"common\".\"permissions_chameleon\" LIMIT 10",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:38:38.728Z",
+    "timestamp": "2025-12-14T15:54:52.833Z",
     "db": "dev",
-    "sql": "SELECT case_id, mabar_code, admission_date FROM patients.cases WHERE case_id IN (1001, 3001, 3002)",
+    "sql": "SELECT * FROM \"common\".\"permissions\" LIMIT 10",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:38:29.202Z",
+    "timestamp": "2025-12-14T15:54:44.622Z",
     "db": "dev",
-    "sql": "SELECT i.case_id, i.indication_status_id, i.indication_start_date, c.admission_date FROM patients.indications i LEFT JOIN patients.cases c ON i.case_id = c.case_id ORDER BY i.indication_start_date DESC LIMIT 20",
+    "sql": "SELECT * FROM \"common\".\"user_chameleon\" LIMIT 5",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:37:39.632Z",
+    "timestamp": "2025-12-14T15:54:40.566Z",
     "db": "dev",
-    "sql": "SELECT COUNT(*) as count, indication_status_id FROM patients.indications GROUP BY indication_status_id ORDER BY count DESC",
+    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permissions_chameleon' ORDER BY ordinal_position",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:37:31.800Z",
+    "timestamp": "2025-12-14T15:54:21.599Z",
     "db": "dev",
-    "sql": "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'patients' AND table_name ILIKE '%indication%'",
+    "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'common' AND table_name LIKE '%chameleon%' OR table_name LIKE '%permission%'",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:37:30.532Z",
+    "timestamp": "2025-12-14T15:54:18.365Z",
     "db": "dev",
-    "sql": "SELECT param_name, param_value, param_desc FROM common.parameters WHERE param_name ILIKE '%rad%' OR param_name ILIKE '%imaging%' ORDER BY param_name",
+    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permission_groups' ORDER BY ordinal_position",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T11:36:55.576Z",
+    "timestamp": "2025-12-14T15:54:15.037Z",
     "db": "dev",
-    "sql": "SELECT param_name, param_value, param_desc FROM common.parameters WHERE param_name ILIKE '%indication%' OR param_name ILIKE '%imaging%' OR param_name ILIKE '%maxTotal%'",
+    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permissions' ORDER BY ordinal_position",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T07:30:37.728Z",
+    "timestamp": "2025-12-14T15:54:09.672Z",
     "db": "dev",
-    "sql": "UPDATE \"patients\".\"cases\" SET sheet_status = '1', sheet_status_time = NOW() WHERE case_id IN (2001, 2002, 2003) RETURNING case_id, sheet_status, sheet_status_time",
+    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'user_chameleon' ORDER BY ordinal_position",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-04T07:30:28.978Z",
+    "timestamp": "2025-12-14T14:50:38.386Z",
     "db": "dev",
-    "sql": "SELECT case_id, patient_id, sheet_status, sheet_status_time FROM \"patients\".\"cases\" WHERE (chameleon_satellite_ward_id = '3' OR (chameleon_satellite_ward_id IS NULL AND chameleon_ward_id = '3')) AND is_active = true LIMIT 10",
+    "sql": "SELECT type_id, type, value, level_above, is_deleted, order_by FROM nursing.event_type ORDER BY type_id",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T16:40:17.431Z",
-    "db": "dev",
-    "sql": "SELECT c.case_id, c.chameleon_ward_id, c.chameleon_satellite_ward_id, p.first_name, p.last_name, c.days_in_ward FROM patients.cases c JOIN patients.patients p ON c.patient_id = p.patient_id WHERE c.chameleon_ward_id IS NOT NULL AND c.chameleon_satellite_ward_id IS NOT NULL AND c.chameleon_satellite_ward_id != c.chameleon_ward_id AND c.is_active = true",
+    "timestamp": "2025-12-14T10:31:16.728Z",
+    "db": "qa_naharia",
+    "sql": "SELECT * FROM common.room_type_details LIMIT 20",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T16:40:09.637Z",
-    "db": "dev",
-    "sql": "SELECT count(*) FROM patients.cases WHERE is_active = true LIMIT 5",
+    "timestamp": "2025-12-14T10:31:15.567Z",
+    "db": "qa_naharia",
+    "sql": "SELECT * FROM common.room_type LIMIT 20",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:48:23.013Z",
-    "db": "dev",
-    "sql": "SELECT COUNT(*) as count FROM patients.cases WHERE chameleon_ward_id = '3' AND chameleon_satellite_ward_id <> '3' AND chameleon_satellite_ward_id IS NOT NULL",
+    "timestamp": "2025-12-14T10:30:00.121Z",
+    "db": "qa_naharia",
+    "sql": "SELECT DISTINCT sw.room_id, r.room_desc FROM patients.surgery_waiting sw LEFT JOIN patients.rooms r ON sw.room_id = r.room_id WHERE sw.room_id IS NOT NULL AND sw.room_id <> '' ORDER BY sw.room_id",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:48:14.947Z",
-    "db": "dev",
-    "sql": "SELECT 'new-cases' as endpoint, COUNT(*) as count FROM patients.cases WHERE sheet_status = '1' AND sheet_status_time >= NOW() - INTERVAL '24 hours' AND (chameleon_satellite_ward_id = '3' OR (chameleon_satellite_ward_id IS NULL AND chameleon_ward_id = '3'))",
+    "timestamp": "2025-12-14T10:29:58.863Z",
+    "db": "qa_naharia",
+    "sql": "SELECT room_id, room_desc, ward_id FROM patients.rooms WHERE room_id LIKE 'פז%' OR room_desc LIKE '%ניתוח%' LIMIT 20",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:48:05.251Z",
-    "db": "dev",
-    "sql": "INSERT INTO patients.cases (case_id, patient_id, nursing_ward, chameleon_ward_id, chameleon_satellite_ward_id, is_active, admission_date, creation_date) VALUES (999012, 999012, '5', '3', '5', true, NOW(), NOW()), (999013, 999013, '5', '3', '5', true, NOW(), NOW()), (999014, 999014, '5', '3', '5', true, NOW(), NOW()), (999015, 999015, '5', '3', '5', true, NOW(), NOW()) RETURNING case_id, chameleon_ward_id, chameleon_satellite_ward_id",
+    "timestamp": "2025-12-14T10:29:57.441Z",
+    "db": "qa_naharia",
+    "sql": "SELECT category_id, category_desc, category_long_desc FROM common.ward_category WHERE category_id IN (7, 8, 20, 23, 24, 25, 26) ORDER BY category_id",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:47:56.129Z",
-    "db": "dev",
-    "sql": "INSERT INTO patients.patients (patient_id, id_number, first_name, last_name, birth_date, sex, full_name, creation_date) VALUES (999012, '300000011', 'נועה', 'שמעון', '1983-05-20', 'F', 'נועה שמעון', NOW()), (999013, '300000012', 'עמית', 'רון', '1991-09-15', 'M', 'עמית רון', NOW()), (999014, '300000013', 'תמר', 'גל', '1979-12-03', 'F', 'תמר גל', NOW()), (999015, '300000014', 'אורי', 'זיו', '1986-07-28', 'M', 'אורי זיו', NOW()) RETURNING patient_id, first_name, last_name",
+    "timestamp": "2025-12-14T10:29:48.388Z",
+    "db": "qa_naharia",
+    "sql": "SELECT ward_id, ward_desc, category_id FROM common.wards w LEFT JOIN common.ward_category wc ON w.ward_category = wc.category_id WHERE wc.category_id IN (8, 20) OR ward_desc LIKE '%ניתוח%' OR ward_desc LIKE '%חדר%' LIMIT 20",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:47:45.913Z",
-    "db": "dev",
-    "sql": "UPDATE patients.cases SET sheet_status = '1', sheet_status_time = NOW() WHERE case_id IN (999002, 999003, 999004, 999005, 999006, 999007, 999008, 999009) RETURNING case_id, sheet_status, sheet_status_time",
+    "timestamp": "2025-12-14T10:22:59.361Z",
+    "db": "qa_naharia",
+    "sql": "SELECT * FROM patients.patients_in_surgery LIMIT 5",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-03T15:46:33.578Z",
-    "db": "dev",
-    "sql": "SELECT table_schema, table_name FROM information_schema.tables WHERE table_name = 'monitored'",
+    "timestamp": "2025-12-14T10:22:58.150Z",
+    "db": "qa_naharia",
+    "sql": "SELECT sw.case_id, sw.priority_code, sw.priority_desc, sw.procedure_desc, sw.room_id, c.nursing_ward FROM patients.surgery_waiting sw JOIN patients.cases c ON sw.case_id = c.case_id WHERE c.is_active = true LIMIT 10",
     "env": "local"
   }
 ]
