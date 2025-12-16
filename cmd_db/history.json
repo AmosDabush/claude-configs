@@ -1,122 +1,122 @@
 [
   {
-    "timestamp": "2025-12-14T15:55:22.095Z",
+    "timestamp": "2025-12-16T19:58:52.780Z",
     "db": "dev",
-    "sql": "SELECT COUNT(*) as count FROM \"common\".\"permissions_chameleon\"",
+    "sql": "SELECT chameleon_ward_id, COUNT(*) as count FROM patients.cases GROUP BY chameleon_ward_id ORDER BY chameleon_ward_id",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:55:19.693Z",
+    "timestamp": "2025-12-16T19:58:46.893Z",
     "db": "dev",
-    "sql": "SELECT COUNT(*) as count FROM \"common\".\"user_chameleon\"",
+    "sql": "UPDATE patients.cases SET chameleon_ward_id = '11' WHERE case_id IN (SELECT case_id FROM patients.cases WHERE chameleon_ward_id IS NULL ORDER BY case_id LIMIT 19)",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:55:16.107Z",
+    "timestamp": "2025-12-16T19:58:45.721Z",
     "db": "dev",
-    "sql": "SELECT * FROM \"common\".\"permission_groups\" LIMIT 10",
+    "sql": "UPDATE patients.cases SET chameleon_ward_id = '10' WHERE case_id IN (SELECT case_id FROM patients.cases ORDER BY case_id LIMIT 20)",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:57.282Z",
+    "timestamp": "2025-12-16T19:57:46.538Z",
     "db": "dev",
-    "sql": "SELECT * FROM \"common\".\"permissions_chameleon\" LIMIT 10",
+    "sql": "SELECT case_id, chameleon_ward_id, chameleon_satellite_ward_id FROM patients.cases LIMIT 5",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:52.833Z",
+    "timestamp": "2025-12-16T19:57:45.375Z",
     "db": "dev",
-    "sql": "SELECT * FROM \"common\".\"permissions\" LIMIT 10",
+    "sql": "SELECT COUNT(*) as total_cases FROM patients.cases",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:44.622Z",
+    "timestamp": "2025-12-16T19:57:38.720Z",
     "db": "dev",
-    "sql": "SELECT * FROM \"common\".\"user_chameleon\" LIMIT 5",
+    "sql": "SELECT DISTINCT chameleon_ward_id, COUNT(*) as case_count FROM patients.cases WHERE chameleon_ward_id IS NOT NULL GROUP BY chameleon_ward_id ORDER BY case_count DESC LIMIT 15",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:40.566Z",
+    "timestamp": "2025-12-16T19:57:29.711Z",
     "db": "dev",
-    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permissions_chameleon' ORDER BY ordinal_position",
+    "sql": "SELECT ward_id, system_num FROM common.wards WHERE ward_id IN ('10', '11')",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:21.599Z",
+    "timestamp": "2025-12-16T19:57:28.535Z",
     "db": "dev",
-    "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'common' AND table_name LIKE '%chameleon%' OR table_name LIKE '%permission%'",
+    "sql": "SELECT DISTINCT chameleon_ward_id, COUNT(*) as cases FROM patients.cases WHERE chameleon_ward_id IN ('10', '11') GROUP BY chameleon_ward_id",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:18.365Z",
+    "timestamp": "2025-12-16T19:57:27.344Z",
     "db": "dev",
-    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permission_groups' ORDER BY ordinal_position",
+    "sql": "SELECT system_num, system_name FROM common.source_system WHERE system_name = 'CHAMELEON'",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:15.037Z",
+    "timestamp": "2025-12-16T19:57:06.986Z",
     "db": "dev",
-    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'permissions' ORDER BY ordinal_position",
+    "sql": "SELECT ward_id, ward_long_desc, ward_category, is_internally FROM common.wards WHERE ward_category IS NOT NULL LIMIT 10",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T15:54:09.672Z",
+    "timestamp": "2025-12-16T19:57:05.825Z",
     "db": "dev",
-    "sql": "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'common' AND table_name = 'user_chameleon' ORDER BY ordinal_position",
+    "sql": "SELECT DISTINCT ward_category, COUNT(*) as count FROM common.wards GROUP BY ward_category ORDER BY ward_category",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T14:50:38.386Z",
+    "timestamp": "2025-12-16T19:56:56.408Z",
     "db": "dev",
-    "sql": "SELECT type_id, type, value, level_above, is_deleted, order_by FROM nursing.event_type ORDER BY type_id",
+    "sql": "SELECT ward_id, ward_long_desc, ward_desc, ward_category, is_blocked, is_deleted FROM common.wards WHERE ward_id IN ('2', '400', '10', '11')",
     "env": "local"
   },
   {
-    "timestamp": "2025-12-14T10:31:16.728Z",
+    "timestamp": "2025-12-16T19:56:32.653Z",
+    "db": "dev",
+    "sql": "SELECT * FROM common.permissions_chameleon WHERE user_name = 'coview-ts-dev'",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T19:56:31.321Z",
+    "db": "dev",
+    "sql": "SELECT * FROM common.user_chameleon WHERE user_name = 'coview-ts-dev'",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:48.442Z",
+    "db": "dev",
+    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:43.519Z",
+    "db": "dev",
+    "sql": "ALTER TABLE patients.rooms ALTER COLUMN order_by TYPE character varying USING order_by::character varying",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:33.326Z",
+    "db": "dev",
+    "sql": "SELECT COUNT(*) as rows FROM patients.rooms_backup_20241216",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:28.055Z",
+    "db": "dev",
+    "sql": "CREATE TABLE patients.rooms_backup_20241216 AS SELECT * FROM patients.rooms",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:12.312Z",
+    "db": "dev",
+    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-16T12:21:11.008Z",
     "db": "qa_naharia",
-    "sql": "SELECT * FROM common.room_type_details LIMIT 20",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:31:15.567Z",
-    "db": "qa_naharia",
-    "sql": "SELECT * FROM common.room_type LIMIT 20",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:30:00.121Z",
-    "db": "qa_naharia",
-    "sql": "SELECT DISTINCT sw.room_id, r.room_desc FROM patients.surgery_waiting sw LEFT JOIN patients.rooms r ON sw.room_id = r.room_id WHERE sw.room_id IS NOT NULL AND sw.room_id <> '' ORDER BY sw.room_id",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:29:58.863Z",
-    "db": "qa_naharia",
-    "sql": "SELECT room_id, room_desc, ward_id FROM patients.rooms WHERE room_id LIKE 'פז%' OR room_desc LIKE '%ניתוח%' LIMIT 20",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:29:57.441Z",
-    "db": "qa_naharia",
-    "sql": "SELECT category_id, category_desc, category_long_desc FROM common.ward_category WHERE category_id IN (7, 8, 20, 23, 24, 25, 26) ORDER BY category_id",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:29:48.388Z",
-    "db": "qa_naharia",
-    "sql": "SELECT ward_id, ward_desc, category_id FROM common.wards w LEFT JOIN common.ward_category wc ON w.ward_category = wc.category_id WHERE wc.category_id IN (8, 20) OR ward_desc LIKE '%ניתוח%' OR ward_desc LIKE '%חדר%' LIMIT 20",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:22:59.361Z",
-    "db": "qa_naharia",
-    "sql": "SELECT * FROM patients.patients_in_surgery LIMIT 5",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-14T10:22:58.150Z",
-    "db": "qa_naharia",
-    "sql": "SELECT sw.case_id, sw.priority_code, sw.priority_desc, sw.procedure_desc, sw.room_id, c.nursing_ward FROM patients.surgery_waiting sw JOIN patients.cases c ON sw.case_id = c.case_id WHERE c.is_active = true LIMIT 10",
+    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
     "env": "local"
   }
 ]

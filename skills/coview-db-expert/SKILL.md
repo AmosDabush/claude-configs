@@ -233,6 +233,7 @@ This is **FULL REPLACEMENT** - no incremental updates. All services use this pat
 | Event types (nursing schema) | `nursing.event_type` hierarchical: קטגוריה→סוג אירוע→נושא. Root: רוחבי (ward-level), מטופל (patient-specific) |
 | permissions_chameleon usage | User→ward access control. Used by common-service for ward filtering, access-control for user profile |
 | user_chameleon usage | User profile from Chameleon (fullName, userDesc, sector). Used by access-control for profile enrichment |
+| getNursingWards returns empty | **Flow:** access-control `/acc/general/getNursingWards` → `@User()` from `x-remote-user` header → TIBCO `GetValidGroups` (checks `coView_admin`) → common-service `WardsService.getNursingWards()`. **Requires:** (1) cases with `chameleon_ward_id` set, (2) wards with CHAMELEON system_num, (3) user in `permissions_chameleon` (if not admin). Check `patients.cases.chameleon_ward_id` first! |
 
 ### Aggregation Triggers
 
@@ -408,6 +409,8 @@ This section grows as Claude discovers new information from reference files. Add
 
 | Date | Question | Answer | Source |
 |------|----------|--------|--------|
+| 2024-12-16 | getNursingWards returns empty [] | **Full Flow:** access-control `/acc/general/getNursingWards` → `@User()` extracts from `x-remote-user` header → `resolveUserGroups()` calls TIBCO `GetValidGroups` (checks `coView_admin` group) → common-service `/general/getNursingWards?isAdmin=X` → `WardsService.getNursingWards()` in `wards.services.ts`. **Root cause:** EXISTS clause requires cases with `chameleon_ward_id` or `chameleon_satellite_ward_id`. If ALL cases have NULL, no wards returned. **Fix:** `UPDATE patients.cases SET chameleon_ward_id = 'X' WHERE ...` **Requirements:** (1) CHAMELEON in source_system, (2) wards with matching system_num, (3) cases referencing those wards, (4) user in permissions_chameleon (if not admin). **Tags:** #getNursingWards #access-control #common-service #control-panel-dashboard #permissions_chameleon #user_chameleon #TIBCO #dev-mode | Code + DB query |
+| 2024-12-16 | "לא פעיל in title" logic | Soft-deactivation pattern: beds/rooms with "לא פעיל" in `bedDesc`/`roomDesc` are filtered out using `NOT LIKE '%לא פעיל%'`. Used in departmental-control-dashboard (screenHelpers.ts, screenHandlers.ts). Chameleon marks items inactive via description text. | Code search |
 | 2024-12-14 | Event types in nursing schema | `nursing.event_type` hierarchical: קטגוריה → סוג אירוע → נושא. Two root categories: רוחבי (ward-level) and מטופל (patient-specific). Uses `level_above` for parent. | DB query |
 | 2024-12-14 | permissions_chameleon & user_chameleon purpose | Ward-level access control synced from Chameleon. `permissions_chameleon`: user→ward mapping. `user_chameleon`: user profile (fullName, userDesc, sector). Used by access-control/common-service for ward filtering. | Code analysis |
 
@@ -423,6 +426,70 @@ This section grows as Claude discovers new information from reference files. Add
 |---------|----------|--------|
 | (entries added automatically) |
 
+### Dev Mode Authentication Flow (access-control)
+
+**User Identity** (`user.decorator.ts`):
+- `MOCK_X_REMOTE_USER=true` + `MOCK_REMOTE_USER=coview-ts-dev` → mocks user as `coview-ts-dev`
+- Note: Line 10 has inverted logic `isDev = NODE_ENV !== 'development'` - works when `NODE_ENV=docker`
+
+**TIBCO Mock Options**:
+
+| Option | Trigger | Result |
+|--------|---------|--------|
+| Built-in mock | `MOCK_TIBCO=true` OR `NODE_ENV=development` | Returns `['coView_dev_test']` - early return, NO HTTP call |
+| tibco-mocker service | `TIBCO_MOCK_URL` set (without MOCK_TIBCO) | HTTP call to mocker |
+
+**tibco-mocker hardcoded users** (`tibco-mocker/tibco.controller.ts`):
+- `user1` → `['coView_dev_test']`
+- `user2` → `['COVIEW_doctors']`
+- `user3` → `['COVIEW_doctors', 'COVIEW_nurses']`
+- `user4` → `['coView_admin']` ← **Only admin!**
+
+**Docker-compose settings** (access-control service):
+```
+NODE_ENV: docker
+TIBCO_MOCK_URL: http://tibco-mocker:7556
+MOCK_TIBCO: "true"           ← Takes precedence over tibco-mocker!
+MOCK_X_REMOTE_USER: "true"
+MOCK_REMOTE_USER: coview-ts-dev
+```
+
+**Result in dev mode**:
+1. User = `coview-ts-dev` (from MOCK_REMOTE_USER)
+2. Groups = `['coView_dev_test']` (from MOCK_TIBCO built-in mock)
+3. `isAdmin = false` (coView_dev_test ≠ coView_admin)
+4. **Falls back to `permissions_chameleon` for ward access**
+
+**Chameleon tables are NOT a fallback** - they're the primary source for:
+- `user_chameleon`: Profile enrichment (fullName, userDesc, sector)
+- `permissions_chameleon`: Ward-level permissions for non-admin users (REQUIRED in dev!)
+
+**Tags:** #dev-mode #TIBCO #access-control #tibco-mocker #permissions_chameleon #MOCK_TIBCO
+
+---
+
+## Cross-Reference Index
+
+### Dashboard Dependencies
+| Dashboard | Required Endpoints | Required Tables | See Also |
+|-----------|-------------------|-----------------|----------|
+| control-panel-dashboard | getNursingWards | permissions_chameleon, user_chameleon, wards, cases | #getNursingWards |
+| departmental-control-dashboard | (TBD) | beds, rooms (לא פעיל filter) | #לא-פעיל |
+
+### Endpoint → Knowledge Map
+| Endpoint | Main Knowledge | Tags |
+|----------|---------------|------|
+| getNursingWards | Learned Q&A: 2024-12-16 | #getNursingWards #access-control #common-service |
+
+### Table → Usage Map
+| Table | Used By | Tags |
+|-------|---------|------|
+| permissions_chameleon | getNursingWards, ward access control | #permissions_chameleon #access-control |
+| user_chameleon | profile enrichment | #user_chameleon #access-control |
+| cases.chameleon_ward_id | getNursingWards EXISTS clause | #getNursingWards #cases |
+
+*Search tags with: `grep "#tag-name" SKILL.md`*
+
 ---
 
 ## Changelog
@@ -431,6 +498,10 @@ Track what was learned and when. Claude adds entries here after learning.
 
 | Date | What was learned | Source | Added by |
 |------|------------------|--------|----------|
+| 2024-12-16 | Cross-Reference Index: Dashboard Dependencies, Endpoint→Knowledge, Table→Usage maps with #tags | Skill reorganization | Claude |
+| 2024-12-16 | Dev mode auth flow: MOCK_TIBCO, tibco-mocker users, permissions_chameleon as primary ward access | Code analysis | Claude |
+| 2024-12-16 | getNursingWards full flow including TIBCO auth (x-remote-user → TIBCO GetValidGroups → common-service) | Code + DB query | Claude |
+| 2024-12-16 | "לא פעיל in title" soft-deactivation pattern for beds/rooms | Code search (departmental-control-dashboard) | Claude |
 | 2024-12-14 | FIX: Added "Check Learned Knowledge section" to instruction flow | User feedback | Claude |
 | 2024-12-14 | Promoted permissions_chameleon/user_chameleon to Quick Reference tables | Learning consolidation | Claude |
 | 2024-12-14 | Promoted event_types to Common Operational Answers | Learning consolidation | Claude |
