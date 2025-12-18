@@ -53,6 +53,13 @@ if [ -f "$CLAUDE_DIR/settings.json" ]; then
     echo "✓ settings.json"
 fi
 
+# Sync telegram-bot/ (exclude node_modules, .env, logs)
+if [ -d "$CLAUDE_DIR/telegram-bot" ]; then
+    mkdir -p "$REPO_DIR/telegram-bot"
+    rsync -a --exclude='node_modules' --exclude='.env' --exclude='*.log' "$CLAUDE_DIR/telegram-bot/" "$REPO_DIR/telegram-bot/"
+    echo "✓ telegram-bot/"
+fi
+
 echo ""
 echo "Done! Now you can:"
 echo "  cd $REPO_DIR"

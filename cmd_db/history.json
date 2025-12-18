@@ -1,5 +1,59 @@
 [
   {
+    "timestamp": "2025-12-17T09:01:45.049Z",
+    "db": "dev",
+    "sql": "\n-- Final verification\nSELECT 'total_surgery_waiting' as metric, COUNT(*) as count FROM patients.surgery_waiting\nUNION ALL\nSELECT 'distinct_case_ids', COUNT(DISTINCT case_id) FROM patients.surgery_waiting\nUNION ALL\nSELECT 'with_matching_case', COUNT(*) FROM patients.surgery_waiting sw \nJOIN patients.cases c ON sw.case_id = c.case_id\nUNION ALL\nSELECT 'orphaned_no_case', COUNT(*) FROM patients.surgery_waiting sw \nLEFT JOIN patients.cases c ON sw.case_id = c.case_id\nWHERE c.case_id IS NULL\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:01:38.189Z",
+    "db": "dev",
+    "sql": "\n-- Step 2: Remove duplicate surgery_waiting records, keeping the one with lowest id per case_id\nDELETE FROM patients.surgery_waiting\nWHERE id NOT IN (\n    SELECT MIN(id)\n    FROM patients.surgery_waiting\n    GROUP BY case_id\n);\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:01:30.219Z",
+    "db": "dev",
+    "sql": "\n-- Verify: count surgery_waiting with and without matching cases now\nSELECT 'with_matching_case' as metric, COUNT(*) as count \nFROM patients.surgery_waiting sw \nJOIN patients.cases c ON sw.case_id = c.case_id\nUNION ALL\nSELECT 'orphaned_no_case', COUNT(*) \nFROM patients.surgery_waiting sw \nLEFT JOIN patients.cases c ON sw.case_id = c.case_id\nWHERE c.case_id IS NULL\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:01:22.555Z",
+    "db": "dev",
+    "sql": "\n-- Step 2: Create cases for orphaned caseIds (case_id is integer)\nINSERT INTO patients.cases (case_id, patient_id, nursing_ward, mabar_code, is_active, admission_date, update_date, chameleon_ward_id)\nSELECT \n    case_id as case_id,\n    case_id as patient_id,\n    'כירורגיה' as nursing_ward,\n    'SURG' as mabar_code,\n    true as is_active,\n    NOW() - interval '3 days' as admission_date,\n    NOW() as update_date,\n    '10' as chameleon_ward_id\nFROM (\n    SELECT DISTINCT sw.case_id\n    FROM patients.surgery_waiting sw \n    LEFT JOIN patients.cases c ON sw.case_id = c.case_id\n    WHERE c.case_id IS NULL\n) orphans\nON CONFLICT (case_id) DO NOTHING;\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:01:16.073Z",
+    "db": "dev",
+    "sql": "\n-- Check cases table structure for case_id\nSELECT column_name, data_type \nFROM information_schema.columns \nWHERE table_schema = 'patients' AND table_name = 'cases' AND column_name = 'case_id'\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:01:02.173Z",
+    "db": "dev",
+    "sql": "\n-- Step 1: Create patients for orphaned caseIds\nINSERT INTO patients.patients (patient_id, id_number, first_name, last_name, full_name, birth_date, sex, update_date)\nSELECT \n    case_id as patient_id,\n    case_id::varchar as id_number,\n    CASE (ROW_NUMBER() OVER (ORDER BY case_id) % 10)\n        WHEN 0 THEN 'יוסף'\n        WHEN 1 THEN 'דוד'\n        WHEN 2 THEN 'משה'\n        WHEN 3 THEN 'שרה'\n        WHEN 4 THEN 'רחל'\n        WHEN 5 THEN 'לאה'\n        WHEN 6 THEN 'אברהם'\n        WHEN 7 THEN 'יעקב'\n        WHEN 8 THEN 'מרים'\n        WHEN 9 THEN 'חנה'\n    END as first_name,\n    CASE (ROW_NUMBER() OVER (ORDER BY case_id) % 8)\n        WHEN 0 THEN 'כהן'\n        WHEN 1 THEN 'לוי'\n        WHEN 2 THEN 'מזרחי'\n        WHEN 3 THEN 'פרץ'\n        WHEN 4 THEN 'ביטון'\n        WHEN 5 THEN 'אברהם'\n        WHEN 6 THEN 'דהן'\n        WHEN 7 THEN 'אזולאי'\n    END as last_name,\n    CASE (ROW_NUMBER() OVER (ORDER BY case_id) % 10)\n        WHEN 0 THEN 'יוסף'\n        WHEN 1 THEN 'דוד'\n        WHEN 2 THEN 'משה'\n        WHEN 3 THEN 'שרה'\n        WHEN 4 THEN 'רחל'\n        WHEN 5 THEN 'לאה'\n        WHEN 6 THEN 'אברהם'\n        WHEN 7 THEN 'יעקב'\n        WHEN 8 THEN 'מרים'\n        WHEN 9 THEN 'חנה'\n    END || ' ' ||\n    CASE (ROW_NUMBER() OVER (ORDER BY case_id) % 8)\n        WHEN 0 THEN 'כהן'\n        WHEN 1 THEN 'לוי'\n        WHEN 2 THEN 'מזרחי'\n        WHEN 3 THEN 'פרץ'\n        WHEN 4 THEN 'ביטון'\n        WHEN 5 THEN 'אברהם'\n        WHEN 6 THEN 'דהן'\n        WHEN 7 THEN 'אזולאי'\n    END as full_name,\n    '1970-01-01'::date + (case_id % 15000 || ' days')::interval as birth_date,\n    CASE WHEN ROW_NUMBER() OVER (ORDER BY case_id) % 2 = 0 THEN 'ז' ELSE 'נ' END as sex,\n    NOW() as update_date\nFROM (\n    SELECT DISTINCT sw.case_id\n    FROM patients.surgery_waiting sw \n    LEFT JOIN patients.cases c ON sw.case_id::varchar = c.case_id::varchar\n    WHERE c.case_id IS NULL\n) orphans\nON CONFLICT (patient_id) DO NOTHING;\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T09:00:48.410Z",
+    "db": "dev",
+    "sql": "\n-- Get all distinct orphaned caseIds that need cases/patients created\nSELECT DISTINCT sw.case_id\nFROM patients.surgery_waiting sw \nLEFT JOIN patients.cases c ON sw.case_id::varchar = c.case_id::varchar\nWHERE c.case_id IS NULL\nORDER BY sw.case_id\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T08:57:25.621Z",
+    "db": "dev",
+    "sql": "\n-- Sample orphaned caseIds\nSELECT sw.case_id, COUNT(*) as occurrences\nFROM patients.surgery_waiting sw \nLEFT JOIN patients.cases c ON sw.case_id::varchar = c.case_id::varchar\nWHERE c.case_id IS NULL\nGROUP BY sw.case_id\nORDER BY occurrences DESC\nLIMIT 10\n",
+    "env": "local"
+  },
+  {
+    "timestamp": "2025-12-17T08:57:12.903Z",
+    "db": "dev",
+    "sql": "\n-- Total surgery_waiting records\nSELECT 'total_surgery_waiting' as metric, COUNT(*) as count FROM patients.surgery_waiting\nUNION ALL\n-- Surgery waiting with matching cases\nSELECT 'with_matching_case', COUNT(*) FROM patients.surgery_waiting sw \nJOIN patients.cases c ON sw.case_id::varchar = c.case_id::varchar\nUNION ALL\n-- Surgery waiting WITHOUT matching cases  \nSELECT 'orphaned_no_case', COUNT(*) FROM patients.surgery_waiting sw \nLEFT JOIN patients.cases c ON sw.case_id::varchar = c.case_id::varchar\nWHERE c.case_id IS NULL\nUNION ALL\n-- Distinct caseIds in surgery_waiting\nSELECT 'distinct_case_ids', COUNT(DISTINCT case_id) FROM patients.surgery_waiting\n",
+    "env": "local"
+  },
+  {
     "timestamp": "2025-12-16T19:58:52.780Z",
     "db": "dev",
     "sql": "SELECT chameleon_ward_id, COUNT(*) as count FROM patients.cases GROUP BY chameleon_ward_id ORDER BY chameleon_ward_id",
@@ -63,60 +117,6 @@
     "timestamp": "2025-12-16T19:57:05.825Z",
     "db": "dev",
     "sql": "SELECT DISTINCT ward_category, COUNT(*) as count FROM common.wards GROUP BY ward_category ORDER BY ward_category",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T19:56:56.408Z",
-    "db": "dev",
-    "sql": "SELECT ward_id, ward_long_desc, ward_desc, ward_category, is_blocked, is_deleted FROM common.wards WHERE ward_id IN ('2', '400', '10', '11')",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T19:56:32.653Z",
-    "db": "dev",
-    "sql": "SELECT * FROM common.permissions_chameleon WHERE user_name = 'coview-ts-dev'",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T19:56:31.321Z",
-    "db": "dev",
-    "sql": "SELECT * FROM common.user_chameleon WHERE user_name = 'coview-ts-dev'",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:48.442Z",
-    "db": "dev",
-    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:43.519Z",
-    "db": "dev",
-    "sql": "ALTER TABLE patients.rooms ALTER COLUMN order_by TYPE character varying USING order_by::character varying",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:33.326Z",
-    "db": "dev",
-    "sql": "SELECT COUNT(*) as rows FROM patients.rooms_backup_20241216",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:28.055Z",
-    "db": "dev",
-    "sql": "CREATE TABLE patients.rooms_backup_20241216 AS SELECT * FROM patients.rooms",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:12.312Z",
-    "db": "dev",
-    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
-    "env": "local"
-  },
-  {
-    "timestamp": "2025-12-16T12:21:11.008Z",
-    "db": "qa_naharia",
-    "sql": "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'patients' AND table_name = 'rooms' ORDER BY ordinal_position",
     "env": "local"
   }
 ]
