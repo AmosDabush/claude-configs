@@ -1,0 +1,174 @@
+[
+  {
+    "name": "__cf_bm",
+    "value": "H0FjAoa5iiLPyw4QhsKZYxGciNNX.CMiHpL3GExrpxM-1766751190-1.0.1.1-tXRCTiy4VjHg4Qm0FV4rxW7tHGTk.3DegWTO8Hohe3R_J66ZBb6wgPZ.wiq73xgim4pKKnlFVbXPih1QAtDI3I53Jbk91INcMsDmScXrLmcC_orNl60KNS50v_d9R.j9",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1766752990.477785,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_cfuvid",
+    "value": "Gk53AdpJzxSPmFpFLQCBwS8asqCPLPNejf4v7aAy_B0-1766751190553-0.0.1.1-604800000",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "bb_session_id",
+    "value": "f24e7aa8-b745-ebb4-7b7f-a27c182bbba8",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "cf_clearance",
+    "value": "CrhPHQKgzYBKc3S1C6Llgo7w.JuY2.vtGPpdT031gBc-1766751191-1.2.1.1-NKQDEMASWzWnyg07bS1HYGItsoAkWVokOPxW5X5Rx0Wi4L3zwebvi8PAS0bZv8pKI86BUF4PP9w8tDDiKWktFwBoyL5dgKcmh.O2P9C2NGqAIEpSTP.c7WR9t7fWLjUW4lED4XupnXJi5wTJFCCHRjXI7A7qwLP7WnuPAdp4LLxbyIm3t7HDrvq1LpSuq0Xfi.7Ki_NgKnKBWY6dx7NByJaWuh9myYtcr7sU_1OLOcs",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1798287191.568722,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://monday.com",
+    "_crHasCrossSiteAncestor": false
+  },
+  {
+    "name": "bb_visitor_id",
+    "value": "494609b8",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1801311191.990536,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "dapulseAccountSlugs",
+    "value": "%5B%22mohgov%22%5D",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1798287193.012327,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "dapulseLastLoginAccount",
+    "value": "mohgov",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1801311194.840083,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "dapulseUserId",
+    "value": "97673527",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "imf",
+    "value": "bmcf",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": 1766837593.01237,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "zlp",
+    "value": "jret",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": 1766837593.012384,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "l_v_t",
+    "value": "%7B%2297673527%22%3A%22d812ee0950bf45716c094d36b3c278a2%22%7D",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1801311194.012411,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "jwt_session_token",
+    "value": "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjYwMTEzMzQ1OSwiYWFpIjoxLCJ1aWQiOjk3NjczNTI3LCJpYWQiOiIyMDI1LTEyLTI2VDEyOjEzOjEzLjgxNloiLCJwZXIiOiJtZTpzZXNzaW9uIiwiYWN0aWQiOjExODU1MDk0LCJyZ24iOiJ1c2UxIn0.VQmi6i52vtyu0eyZ6yx3SKk-NHHNyP5O_PH9WTshtv4",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": 1801311194.012425,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "region",
+    "value": "use1",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": 1798287193.012441,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "monday_active_account_slugs",
+    "value": "%5B%22mohgov%22%5D",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1798287194.839997,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "monday_slug_details",
+    "value": "%5B%7B%22un%22%3A%22Amos+Dabush%22%2C%22ue%22%3A%22amos.dabush1%40moh.gov.il%22%2C%22ui%22%3A97673527%2C%22us%22%3A1009%2C%22an%22%3A%22moh.gov%22%2C%22ac%22%3A%222022-04-14T06%3A00%3A27Z%22%2C%22ai%22%3A11855094%2C%22sl%22%3A%22mohgov%22%2C%22lu%22%3A%222025-12-26T12%3A13%3A14%2B00%3A00%22%7D%5D",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1798287194.84006,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "encUserId",
+    "value": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjM1OTY1NzQzODksImRhdCI6OTc2NzM1Mjd9.o0MOctzvYF7omTIUoYxyaq2EgylVkRm6n_ooRGfLnHc",
+    "domain": ".monday.com",
+    "path": "/",
+    "expires": 1801311194.840125,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "dapulse_session",
+    "value": "LzlOS0dYUForbGh6QkhNMWRDdlQrc2xPMEwySk84bDVZRm5LbTA3RzE2VmRjNDJ6SUVxVWgrS2l0N2FhTzVzcVBjUy80UFhwV2I4TkVobjFMTzRMY0NkZnRjbEkzMStIY2pCTWRmVmtIaGR4aHdaa2FzYTlLNHNhTkxmWElkeGlCZkVGVzdnOXdoSzdqWC96ZnkxY2R6NVcyM3k5UDVTR01SMjVscHEvb21HNjRSU0lTeE1FRitpckN3amJYdEdKZG9mcjMzVzhoQ2Q2OWJLZWF5NnBJTjlvbE9XWXRGcFp0ZHNsbk9oOG8rS1JNbU0vc3MrTzJicWlwQUxMSzhIN0tYQzMrN3ZEZlZWdmtId05WNkt4NmpXcisrNlRUc3lkZUlXNytGcEdrMEhLNGVyd0gyWEV0dzk2elg5SmtvS3F6cENmajZRL1RJMGhCdytBalo1Tk01RHRpTGE3bnVCTmI3WG53SVRyNGJBPS0tQ2Y1ZUw2alBWTmtsYlVkYjBZTGJBZz09--4f844b1240ba7c6ad98a95a5ef8e2a0889166390",
+    "domain": "mohgov.monday.com",
+    "path": "/",
+    "expires": 1798308146.84015,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  }
+]

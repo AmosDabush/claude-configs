@@ -1,0 +1,1918 @@
+{
+  "tables": {
+    "ambulance.ambulance_codes": {
+      "columns": [
+        "amb_comp_id",
+        "company_name",
+        "company_hebrew_name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.956Z"
+    },
+    "ambulance.dispatching_codes": {
+      "columns": [
+        "code",
+        "description",
+        "is_confidential"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "ambulance.drive_priority": {
+      "columns": [
+        "code",
+        "description"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "ambulance.field_mappings": {
+      "columns": [
+        "company",
+        "field_name",
+        "coview_field_name",
+        "hebrew_field_name",
+        "key_type_id",
+        "id",
+        "connect_to_table"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "ambulance.healthcare_insurance_codes": {
+      "columns": [
+        "code",
+        "description"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "ambulance.medical_condition_codes": {
+      "columns": [
+        "code",
+        "description",
+        "is_confidential"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "ambulance.patient_status_codes": {
+      "columns": [
+        "code",
+        "description"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.action_history": {
+      "columns": [
+        "id",
+        "user_name",
+        "action_name",
+        "action_time",
+        "is_mobile",
+        "feature_name",
+        "action_type",
+        "value"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.ambulance_companies": {
+      "columns": [
+        "amb_comp_id",
+        "amb_comp_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.column_settings": {
+      "columns": [
+        "column_name",
+        "heb_name",
+        "column_id",
+        "type",
+        "column_key",
+        "identity_type",
+        "chart_type",
+        "sort_type",
+        "sort_type_3",
+        "direction"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.feature_permissions": {
+      "columns": [
+        "group_id",
+        "feature_id",
+        "permission_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.features": {
+      "columns": [
+        "id",
+        "screen_id",
+        "parent_feature_id",
+        "english_desc",
+        "hebrew_desc",
+        "icon_url",
+        "is_enable",
+        "is_visible",
+        "feature_order",
+        "is_mobile",
+        "parent_id",
+        "feature_type"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.features_toggle_1": {
+      "columns": [
+        "feature_id",
+        "feature_type",
+        "feature_en_desc",
+        "feature_hb_desc",
+        "is_enable",
+        "is_visible",
+        "change_by_filter",
+        "high_feature",
+        "screen_name",
+        "icon_url",
+        "show_in_menu",
+        "is_mobile",
+        "is_bottom",
+        "feature_order",
+        "show_in_home_page"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.field_mappings": {
+      "columns": [
+        "company",
+        "field_name",
+        "coview_field_name",
+        "hebrew_field_name",
+        "key_type_id",
+        "id",
+        "connect_to_table"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.groups_features": {
+      "columns": [
+        "group_id",
+        "feature_id",
+        "permission"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.higher_wards": {
+      "columns": [
+        "ward_id",
+        "higher_ward_code",
+        "bed_standart",
+        "num_of_cases",
+        "ward_long_desc",
+        "staff_members_num",
+        "respirators_num",
+        "isolations_num",
+        "satellite_num",
+        "ward_category",
+        "chameleon_ward_id",
+        "chameleon_bed_standart",
+        "update_date",
+        "namer_num_of_cases",
+        "outer_beds",
+        "to_show",
+        "last_events",
+        "blocked_beds",
+        "unintrusive_resp",
+        "intrusive_resp",
+        "blocked_free_beds",
+        "female_empty_beds",
+        "male_empty_beds",
+        "other_empty_beds",
+        "free_beds",
+        "assigned",
+        "vacation",
+        "discharge",
+        "bed_standart_protected",
+        "is_icu",
+        "is_mugbar",
+        "supervised_patients"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.higher_wards_copy": {
+      "columns": [
+        "ward_id",
+        "higher_ward_code",
+        "bed_standart",
+        "num_of_cases",
+        "ward_long_desc",
+        "staff_members_num",
+        "respirators_num",
+        "isolations_num",
+        "satellite_num",
+        "ward_category",
+        "chameleon_ward_id",
+        "chameleon_bed_standart",
+        "update_date",
+        "namer_num_of_cases",
+        "outer_beds",
+        "to_show",
+        "last_events",
+        "blocked_beds",
+        "unintrusive_resp",
+        "intrusive_resp",
+        "blocked_free_beds",
+        "female_empty_beds",
+        "male_empty_beds",
+        "other_empty_beds",
+        "free_beds",
+        "assigned",
+        "vacation",
+        "discharge",
+        "bed_standart_protected",
+        "is_icu",
+        "is_mugbar",
+        "supervised_patients"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.infections_agg": {
+      "columns": [
+        "ward_id",
+        "room_id",
+        "free_beds",
+        "free_room",
+        "infections",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.infections_agg_copy": {
+      "columns": [
+        "ward_id",
+        "room_id",
+        "free_beds",
+        "free_room",
+        "infections",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.interface_frequency": {
+      "columns": [
+        "interface_name",
+        "interface_frequency",
+        "interface_id",
+        "interface_heb_name",
+        "send_warning_mail"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.interfaces_updates": {
+      "columns": [
+        "interface_name",
+        "update_date",
+        "finish_update",
+        "last_successful_update"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.log_table": {
+      "columns": [
+        "id",
+        "creation_date",
+        "log_type",
+        "log_message"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.login_user": {
+      "columns": [
+        "user_name",
+        "login_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.malrad_wards": {
+      "columns": [
+        "ward_id",
+        "ward_long_desc",
+        "trauma",
+        "trauma_cases",
+        "consultation",
+        "consultation_cases",
+        "decisions",
+        "decisions_cases",
+        "hospitalizations",
+        "hospitalizations_cases",
+        "transfers",
+        "transfers_cases",
+        "total",
+        "trauma_room_exist",
+        "update_date",
+        "last_events",
+        "sheet_status",
+        "room_id",
+        "events_cases"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.malrad_wards_copy": {
+      "columns": [
+        "ward_id",
+        "ward_long_desc",
+        "trauma",
+        "trauma_cases",
+        "consultation",
+        "consultation_cases",
+        "decisions",
+        "decisions_cases",
+        "hospitalizations",
+        "hospitalizations_cases",
+        "transfers",
+        "transfers_cases",
+        "total",
+        "trauma_room_exist",
+        "update_date",
+        "last_events",
+        "sheet_status",
+        "room_id",
+        "events_cases"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.measurements": {
+      "columns": [
+        "measurement_id",
+        "measurement_desc",
+        "is_group_measurement",
+        "measurement_group",
+        "measurement_heb",
+        "measurement_disp",
+        "measurement_elastic",
+        "measurement_y_min_value",
+        "measurement_y_max_value",
+        "measurement_unit",
+        "measurement_is_active",
+        "measurement_is_shown_in_card",
+        "update_date",
+        "update_user",
+        "is_delete",
+        "date_from",
+        "date_to",
+        "ward_id",
+        "order_by",
+        "size",
+        "backward_time_in_sec",
+        "is_dependency",
+        "show_after_time",
+        "max_value",
+        "min_value",
+        "measure_excep",
+        "from_sql"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.measurements_groups": {
+      "columns": [
+        "measurements_group_id",
+        "measurements_group_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.measurements_units": {
+      "columns": [
+        "measurement_id",
+        "measurement_symbol"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.module_permissions": {
+      "columns": [
+        "group_id",
+        "module_id",
+        "permission_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.modules": {
+      "columns": [
+        "id",
+        "english_desc",
+        "hebrew_desc",
+        "icon_url",
+        "is_enable",
+        "is_visible",
+        "is_in_menu",
+        "feature_order",
+        "show_in_home_page",
+        "is_bottom",
+        "is_mobile"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.number_of_beds_in_ward": {
+      "columns": [
+        "ward_id",
+        "param_value"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.nursing_support_staff": {
+      "columns": [
+        "ward_id",
+        "note_user",
+        "note_date",
+        "support_staff_counter"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.param_type_value": {
+      "columns": [
+        "param_type_value",
+        "param_type_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.parameters": {
+      "columns": [
+        "param_id",
+        "param_name",
+        "param_desc",
+        "param_value",
+        "param_type_value",
+        "param_group",
+        "param_value_default"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.permission_groups": {
+      "columns": [
+        "id",
+        "name",
+        "ad_group_name",
+        "comment",
+        "is_delete"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.permissions": {
+      "columns": [
+        "permission_id",
+        "description"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.permissions_chameleon": {
+      "columns": [
+        "id",
+        "user_name",
+        "ward_id",
+        "main_ward",
+        "is_general",
+        "update_date",
+        "user_code"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.permissions_chameleon_copy": {
+      "columns": [
+        "id",
+        "user_name",
+        "ward_id",
+        "main_ward",
+        "is_general",
+        "update_date",
+        "user_code"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.room_type": {
+      "columns": [
+        "id",
+        "system_num",
+        "ward_id",
+        "room_id",
+        "room_type"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.room_type_details": {
+      "columns": [
+        "id",
+        "room_type_name",
+        "room_key_name",
+        "show_in_screen",
+        "room_fetch_key"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.routes": {
+      "columns": [
+        "id",
+        "name",
+        "text",
+        "method",
+        "feature_id",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.routes_permissions": {
+      "columns": [
+        "id",
+        "route_id",
+        "group_id",
+        "permission_id",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.screen_interface_mapping": {
+      "columns": [
+        "screen_id",
+        "interface_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.screen_permissions": {
+      "columns": [
+        "group_id",
+        "screen_id",
+        "permission_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.screen_settings": {
+      "columns": [
+        "screen_label",
+        "screen_id",
+        "feature_order",
+        "first_row_sort",
+        "second_row_sort",
+        "user_name",
+        "agg_info_by",
+        "search_by"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.screens": {
+      "columns": [
+        "id",
+        "module_id",
+        "english_desc",
+        "hebrew_desc",
+        "screen_name",
+        "is_enable",
+        "is_visible",
+        "is_in_menu",
+        "feature_order",
+        "show_in_home_page",
+        "is_mobile"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.source_system": {
+      "columns": [
+        "system_num",
+        "system_name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.urls": {
+      "columns": [
+        "id",
+        "url_to_open",
+        "img_src",
+        "text",
+        "platform",
+        "param_id",
+        "on_card"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.user_app_usage": {
+      "columns": [
+        "row_id",
+        "user_name",
+        "module",
+        "connect_time",
+        "route_change_time",
+        "disconnect_time",
+        "is_mobile"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.user_chameleon": {
+      "columns": [
+        "user_name",
+        "user_code",
+        "id_num_user",
+        "full_name",
+        "user_desc",
+        "sector_code",
+        "sector_desc",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.user_chameleon_copy": {
+      "columns": [
+        "user_name",
+        "user_code",
+        "id_num_user",
+        "full_name",
+        "user_desc",
+        "sector_code",
+        "sector_desc",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.ward_category": {
+      "columns": [
+        "category_id",
+        "category_desc",
+        "category_long_desc",
+        "system_num"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.wards": {
+      "columns": [
+        "ward_id",
+        "ward_category",
+        "ward_long_desc",
+        "ward_desc",
+        "additional_ward_code",
+        "ward_license",
+        "high_ward_code",
+        "open_date",
+        "close_date",
+        "is_blocked",
+        "is_deleted",
+        "system_num",
+        "complex_id",
+        "is_icu",
+        "is_internally",
+        "bed_standart",
+        "update_date",
+        "is_aran",
+        "bed_standart_protected",
+        "is_mugbar",
+        "coview_orgid_exclude",
+        "bed_standart_mabar"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "common.wards_copy": {
+      "columns": [
+        "ward_id",
+        "ward_category",
+        "ward_long_desc",
+        "ward_desc",
+        "additional_ward_code",
+        "ward_license",
+        "high_ward_code",
+        "open_date",
+        "close_date",
+        "is_blocked",
+        "is_deleted",
+        "system_num",
+        "complex_id",
+        "is_icu",
+        "is_internally",
+        "bed_standart",
+        "update_date",
+        "is_aran",
+        "bed_standart_protected",
+        "is_mugbar",
+        "coview_orgid_exclude",
+        "bed_standart_mabar"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.blood_products": {
+      "columns": [
+        "blood_product",
+        "blood_type",
+        "amount",
+        "min_value"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.blood_products_copy": {
+      "columns": [
+        "blood_product",
+        "blood_type",
+        "amount",
+        "min_value"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.patients_lab_exam_details": {
+      "columns": [
+        "id",
+        "case_id",
+        "sample_num",
+        "collection_time",
+        "test_code",
+        "test_desc",
+        "result",
+        "result_time",
+        "unit",
+        "abnormal",
+        "result_status",
+        "result_doc_time",
+        "performing_lab"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.patients_lab_exam_details_copy": {
+      "columns": [
+        "id",
+        "case_id",
+        "sample_num",
+        "collection_time",
+        "test_code",
+        "test_desc",
+        "result",
+        "result_time",
+        "unit",
+        "abnormal",
+        "result_status",
+        "result_doc_time",
+        "performing_lab"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.result_docs": {
+      "columns": [
+        "order_id",
+        "collection_time",
+        "lab_doc_status",
+        "status_time",
+        "sample_id",
+        "case_id",
+        "ordering_unit",
+        "preforming_lab"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "labs.result_docs_copy": {
+      "columns": [
+        "order_id",
+        "collection_time",
+        "lab_doc_status",
+        "status_time",
+        "sample_id",
+        "case_id",
+        "ordering_unit",
+        "preforming_lab"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "logistics.operational_continuity": {
+      "columns": [
+        "resource_code",
+        "resource_name",
+        "actual_quantity",
+        "standart_quantity",
+        "min_quantity",
+        "last_update",
+        "updated_user"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.display_name": {
+      "columns": [
+        "display_num",
+        "display_name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.event": {
+      "columns": [
+        "event_id",
+        "type_id",
+        "documentation_date",
+        "event_date",
+        "nurse_user_name",
+        "case_id",
+        "event_location",
+        "patient_ward",
+        "event_desc",
+        "is_close",
+        "category_value",
+        "category_id",
+        "event_type_value",
+        "event_type_id",
+        "subject_value",
+        "subject_id",
+        "patient_id",
+        "has_more_reports",
+        "patient_first_name",
+        "patient_last_name",
+        "sex",
+        "id_number",
+        "is_confidential",
+        "event_index",
+        "birth_data",
+        "birth_date",
+        "is_mailed",
+        "event_log",
+        "is_deleted",
+        "event_p_not_exist"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.event_type": {
+      "columns": [
+        "type_id",
+        "type",
+        "value",
+        "level_above",
+        "is_deleted",
+        "order_by"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.mailed_events": {
+      "columns": [
+        "id",
+        "event_id",
+        "mail",
+        "date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.send_email": {
+      "columns": [
+        "group_name",
+        "recipient",
+        "email_address"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.shifts": {
+      "columns": [
+        "shift_name",
+        "shift_start_hour",
+        "shift_start_min",
+        "shift_end_hour",
+        "shift_end_min"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.ward_notes": {
+      "columns": [
+        "ward_desc",
+        "note_user",
+        "note_date",
+        "note_text"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "nursing.wards_order": {
+      "columns": [
+        "display_num",
+        "ward_id",
+        "order_by",
+        "is_active"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.ambulance_drives": {
+      "columns": [
+        "amb_comp_id",
+        "drive_id",
+        "location",
+        "dispatching_type_cd",
+        "dispatching_type_value",
+        "medical_classification_cd",
+        "medical_classification_value",
+        "urgency_cd",
+        "light_injured_count",
+        "medium_injured_count",
+        "severe_injured_count",
+        "deceased_count",
+        "evacuation",
+        "on_evacuation_site",
+        "available",
+        "evacuation_site_code",
+        "evacuation_site_value",
+        "eta",
+        "is_cancel",
+        "amb_code",
+        "created_at",
+        "updated_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.ambulance_patients": {
+      "columns": [
+        "id",
+        "amb_comp_id",
+        "drive_id",
+        "patient_token",
+        "patient_id",
+        "injured_status_value",
+        "id_type",
+        "birth_date",
+        "gender",
+        "koupat_holim_id",
+        "icd9_cd",
+        "icd9_value",
+        "patient_status_key",
+        "patient_status_value",
+        "created_at",
+        "updated_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.beds": {
+      "columns": [
+        "bed_id",
+        "bed_desc",
+        "ward_id",
+        "system",
+        "update_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.beds_copy": {
+      "columns": [
+        "bed_id",
+        "bed_desc",
+        "ward_id",
+        "system",
+        "update_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.blocked_beds": {
+      "columns": [
+        "bed_id",
+        "comment_block_bed",
+        "update_time",
+        "system_num"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.cards_agg": {
+      "columns": [
+        "id",
+        "case_id",
+        "patient_id",
+        "id_number",
+        "first_name",
+        "last_name",
+        "father_name",
+        "sex",
+        "birth_date",
+        "admission_date",
+        "department_id",
+        "ward_desc",
+        "room_id",
+        "room_desc",
+        "bed_id",
+        "bed_desc",
+        "blocked_bed",
+        "chameleon_ward_id",
+        "chameleon_satellite_ward_id",
+        "revisit",
+        "infection",
+        "isolation",
+        "monitor",
+        "consultation",
+        "updated_time",
+        "nursing",
+        "respirators",
+        "panic_result",
+        "invalid_result",
+        "lab_results",
+        "discharge_stage",
+        "discharge_docs",
+        "no_nursing_doc",
+        "no_medical_doc",
+        "fall_risk",
+        "nurses",
+        "days_in_ward",
+        "chameleon_ward_desc",
+        "chameleon_satellite_ward_desc",
+        "has_similar_name",
+        "has_events",
+        "order_by",
+        "imaging"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.cards_agg_changes_log": {
+      "columns": [
+        "case_id",
+        "bed_id",
+        "inserted_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.case_isolation": {
+      "columns": [
+        "case_id",
+        "isolation_id",
+        "isolation_type_id",
+        "isolation_type_desc",
+        "isolation_reason_id",
+        "isolation_reason_desc",
+        "isolation_start_date",
+        "isolation_end_date",
+        "coview_start_date",
+        "coview_end_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.case_isolation_copy": {
+      "columns": [
+        "case_id",
+        "isolation_id",
+        "isolation_type_id",
+        "isolation_type_desc",
+        "isolation_reason_id",
+        "isolation_reason_desc",
+        "isolation_start_date",
+        "isolation_end_date",
+        "coview_start_date",
+        "coview_end_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.958Z"
+    },
+    "patients.cases": {
+      "columns": [
+        "case_id",
+        "patient_id",
+        "mabar_code",
+        "nursing_ward",
+        "bed_id",
+        "room_id",
+        "is_active",
+        "is_respirated",
+        "creation_date",
+        "update_date",
+        "corona_status_id",
+        "admission_date",
+        "discharge_date",
+        "chameleon_ward_id",
+        "chameleon_satellite_ward_id",
+        "days_in_ward",
+        "med_ward_admission_date",
+        "admission_type",
+        "admission_type_desc",
+        "transfer_category",
+        "movement_date",
+        "movement_time",
+        "plan_mabar_code",
+        "plan_nursing_ward",
+        "absence",
+        "adm_reason",
+        "reception_type",
+        "arrival_mode",
+        "referral_type",
+        "revisit",
+        "adm_reason_id",
+        "reception_type_id",
+        "arrival_mode_id",
+        "referral_type_id",
+        "sheet_status",
+        "sheet_status_time",
+        "aran_id",
+        "aran_location",
+        "main_injury",
+        "med_status_er",
+        "med_status_hospital",
+        "visitor_type_id",
+        "visitor_type_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.cases_copy": {
+      "columns": [
+        "case_id",
+        "patient_id",
+        "mabar_code",
+        "nursing_ward",
+        "bed_id",
+        "room_id",
+        "is_active",
+        "is_respirated",
+        "creation_date",
+        "update_date",
+        "corona_status_id",
+        "admission_date",
+        "discharge_date",
+        "chameleon_ward_id",
+        "chameleon_satellite_ward_id",
+        "days_in_ward",
+        "med_ward_admission_date",
+        "admission_type",
+        "admission_type_desc",
+        "transfer_category",
+        "movement_date",
+        "movement_time",
+        "plan_mabar_code",
+        "plan_nursing_ward",
+        "absence",
+        "adm_reason",
+        "reception_type",
+        "arrival_mode",
+        "referral_type",
+        "revisit",
+        "adm_reason_id",
+        "reception_type_id",
+        "arrival_mode_id",
+        "referral_type_id",
+        "sheet_status",
+        "sheet_status_time",
+        "aran_id",
+        "aran_location",
+        "main_injury",
+        "med_status_er",
+        "med_status_hospital",
+        "visitor_type_id",
+        "visitor_type_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.condition": {
+      "columns": [
+        "id",
+        "case_id",
+        "patient_condition_desc",
+        "patient_condition_code",
+        "create_date_time",
+        "comment",
+        "user_name",
+        "component_name",
+        "component_code",
+        "coview_update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.condition_copy": {
+      "columns": [
+        "id",
+        "case_id",
+        "patient_condition_desc",
+        "patient_condition_code",
+        "create_date_time",
+        "comment",
+        "user_name",
+        "component_name",
+        "component_code",
+        "coview_update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.consultations": {
+      "columns": [
+        "request_id",
+        "request_date",
+        "requester_name",
+        "consult_ward",
+        "case_id",
+        "id_number",
+        "urgency",
+        "consult_status",
+        "planned_visit_date",
+        "is_delayed",
+        "consult_ward_desc",
+        "update_date",
+        "requester_name_desc",
+        "requester_name_ad",
+        "consult_inviting_ward_id",
+        "status_date",
+        "defining_problem",
+        "consultation_question",
+        "follow_up",
+        "consultants_answer",
+        "counselors_name",
+        "counselors_desc",
+        "counselors_name_ad"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.consultations_copy": {
+      "columns": [
+        "request_id",
+        "request_date",
+        "requester_name",
+        "consult_ward",
+        "case_id",
+        "id_number",
+        "urgency",
+        "consult_status",
+        "planned_visit_date",
+        "is_delayed",
+        "consult_ward_desc",
+        "update_date",
+        "requester_name_desc",
+        "requester_name_ad",
+        "consult_inviting_ward_id",
+        "status_date",
+        "defining_problem",
+        "consultation_question",
+        "follow_up",
+        "consultants_answer",
+        "counselors_name",
+        "counselors_desc",
+        "counselors_name_ad"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.doc_exam_copy": {
+      "columns": [
+        "case_id",
+        "charge_doc",
+        "main_complaint",
+        "user_name",
+        "saving_date_time_mc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.doc_exam_old": {
+      "columns": [
+        "case_id",
+        "charge_doc",
+        "main_complaint",
+        "user_name",
+        "saving_date_time_mc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.document_discharge": {
+      "columns": [
+        "case_id",
+        "document_discharge_type",
+        "records_name",
+        "records_type",
+        "document_discharge_date",
+        "coview_update_date",
+        "document_discharge_code"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.document_discharge_copy": {
+      "columns": [
+        "case_id",
+        "document_discharge_type",
+        "records_name",
+        "records_type",
+        "document_discharge_date",
+        "coview_update_date",
+        "document_discharge_code"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.er_release": {
+      "columns": [
+        "case_id",
+        "doctor_decision",
+        "intended_ward",
+        "decision_date_time",
+        "doctor_decision_id",
+        "er_release_pdf"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.er_release_copy": {
+      "columns": [
+        "case_id",
+        "doctor_decision",
+        "intended_ward",
+        "decision_date_time",
+        "doctor_decision_id",
+        "er_release_pdf"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.indication_icon": {
+      "columns": [
+        "indication_id",
+        "indication_status_id",
+        "status_desc",
+        "indication_status_icon",
+        "indication_status_duration_seconds",
+        "icon_width",
+        "icon_height",
+        "is_active",
+        "is_use_coview_times",
+        "indication_status_desc",
+        "param_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.indications": {
+      "columns": [
+        "case_id",
+        "indication_interface_id",
+        "indication_interface_desc",
+        "indication_status_id",
+        "indication_status_desc",
+        "indication_type_id",
+        "indication_type_desc",
+        "indication_start_date",
+        "indication_end_date",
+        "coview_start_date",
+        "coview_end_date",
+        "service_group_head_code",
+        "service_group_desc",
+        "access_num",
+        "unusual_result_code",
+        "unusual_result_desc",
+        "preforming_unit",
+        "imaging_reporter_status",
+        "requesting_unit",
+        "cnf_time",
+        "dne_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.indications_copy": {
+      "columns": [
+        "case_id",
+        "indication_interface_id",
+        "indication_interface_desc",
+        "indication_status_id",
+        "indication_status_desc",
+        "indication_type_id",
+        "indication_type_desc",
+        "indication_start_date",
+        "indication_end_date",
+        "coview_start_date",
+        "coview_end_date",
+        "service_group_head_code",
+        "service_group_desc",
+        "access_num",
+        "unusual_result_code",
+        "unusual_result_desc",
+        "preforming_unit",
+        "imaging_reporter_status",
+        "requesting_unit",
+        "cnf_time",
+        "dne_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.infections": {
+      "columns": [
+        "case_id",
+        "infection_name",
+        "infection_desc",
+        "infection_status",
+        "infection_start_date",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.infections_copy": {
+      "columns": [
+        "case_id",
+        "infection_name",
+        "infection_desc",
+        "infection_status",
+        "infection_start_date",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.locations": {
+      "columns": [
+        "location_id",
+        "bed_id",
+        "room_id",
+        "nursing_ward",
+        "system",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.locations_copy": {
+      "columns": [
+        "location_id",
+        "bed_id",
+        "room_id",
+        "nursing_ward",
+        "system",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.monitored": {
+      "columns": [
+        "id",
+        "case_id",
+        "connect_time",
+        "created_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.monitored_copy": {
+      "columns": [
+        "id",
+        "case_id",
+        "connect_time",
+        "created_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.new_case": {
+      "columns": [
+        "case_id",
+        "is_new",
+        "is_new_desc",
+        "nursing_doc",
+        "medical_doc",
+        "coview_start_date",
+        "coview_end_date",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.new_case_copy": {
+      "columns": [
+        "case_id",
+        "is_new",
+        "is_new_desc",
+        "nursing_doc",
+        "medical_doc",
+        "coview_start_date",
+        "coview_end_date",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.new_case_old": {
+      "columns": [
+        "case_id",
+        "is_new",
+        "is_new_desc",
+        "nursing_doc",
+        "medical_doc",
+        "coview_start_date",
+        "coview_end_date",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nurse_exam": {
+      "columns": [
+        "case_id",
+        "user_name",
+        "charge_nurse",
+        "saving_date_time_anm",
+        "saving_date_time_ind"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nurse_exam_copy": {
+      "columns": [
+        "case_id",
+        "user_name",
+        "charge_nurse",
+        "saving_date_time_anm",
+        "saving_date_time_ind"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nurses": {
+      "columns": [
+        "id",
+        "nurse_id",
+        "nursing_ward",
+        "nurse_room_number",
+        "case_id",
+        "nurse_first_name",
+        "nurse_sur_name",
+        "update_date",
+        "nurse_user_name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nurses_copy": {
+      "columns": [
+        "id",
+        "nurse_id",
+        "nursing_ward",
+        "nurse_room_number",
+        "case_id",
+        "nurse_first_name",
+        "nurse_sur_name",
+        "update_date",
+        "nurse_user_name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nursing_status": {
+      "columns": [
+        "case_id",
+        "nurs_status_id",
+        "nurs_status_desc",
+        "nurs_status_date",
+        "id",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nursing_status_class": {
+      "columns": [
+        "id",
+        "nurs_status_id",
+        "nurs_status_type"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nursing_status_copy": {
+      "columns": [
+        "case_id",
+        "nurs_status_id",
+        "nurs_status_desc",
+        "nurs_status_date",
+        "id",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.nursing_status_type": {
+      "columns": [
+        "nurs_status_id",
+        "nurs_status_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.pain_measurments": {
+      "columns": [
+        "case_id",
+        "measurement_desc",
+        "value",
+        "threshold_flag",
+        "threshold_time_flag",
+        "measurement_value_desc",
+        "measurement_id",
+        "update_user",
+        "update_date_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.pain_measurments_copy": {
+      "columns": [
+        "case_id",
+        "measurement_desc",
+        "value",
+        "threshold_flag",
+        "threshold_time_flag",
+        "measurement_value_desc",
+        "measurement_id",
+        "update_user",
+        "update_date_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.patients": {
+      "columns": [
+        "patient_id",
+        "id_number",
+        "first_name",
+        "last_name",
+        "birth_date",
+        "death_date",
+        "creation_date",
+        "update_date",
+        "sex",
+        "father_name",
+        "full_name",
+        "age_group_id",
+        "phone_number_1",
+        "phone_number_2",
+        "hmo",
+        "hmo_code",
+        "age_group_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.patients_comments": {
+      "columns": [
+        "case_id",
+        "ward_id",
+        "comment_user",
+        "comment_date",
+        "comment_text"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.patients_copy": {
+      "columns": [
+        "patient_id",
+        "id_number",
+        "first_name",
+        "last_name",
+        "birth_date",
+        "death_date",
+        "creation_date",
+        "update_date",
+        "sex",
+        "father_name",
+        "full_name",
+        "age_group_id",
+        "phone_number_1",
+        "phone_number_2",
+        "hmo",
+        "hmo_code",
+        "age_group_desc"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.patients_in_surgery": {
+      "columns": [
+        "case_id",
+        "ward_id",
+        "procedure_code",
+        "procedure_desc",
+        "room_id",
+        "entry_room_surgery",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.patients_in_surgery_copy": {
+      "columns": [
+        "case_id",
+        "ward_id",
+        "procedure_code",
+        "procedure_desc",
+        "room_id",
+        "entry_room_surgery",
+        "update_date"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.rooms": {
+      "columns": [
+        "room_id",
+        "room_desc",
+        "ward_id",
+        "order_by",
+        "system",
+        "update_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.rooms_copy": {
+      "columns": [
+        "room_id",
+        "room_desc",
+        "ward_id",
+        "order_by",
+        "system",
+        "update_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.surgery": {
+      "columns": [
+        "id_number",
+        "case_id",
+        "open_medical_record",
+        "coview_update_date",
+        "id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.surgery_copy": {
+      "columns": [
+        "id_number",
+        "case_id",
+        "open_medical_record",
+        "coview_update_date",
+        "id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.surgery_waiting": {
+      "columns": [
+        "id",
+        "case_id",
+        "order_ward_id",
+        "priority_code",
+        "priority_desc",
+        "order_date",
+        "surgery_order",
+        "update_date",
+        "procedure_code",
+        "procedure_desc",
+        "room_id",
+        "surgery_waiting_aran"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.surgery_waiting_copy": {
+      "columns": [
+        "id",
+        "case_id",
+        "order_ward_id",
+        "priority_code",
+        "priority_desc",
+        "order_date",
+        "surgery_order",
+        "update_date",
+        "procedure_code",
+        "procedure_desc",
+        "room_id",
+        "surgery_waiting_aran"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.transport": {
+      "columns": [
+        "case_id",
+        "patient_id",
+        "transport_id",
+        "case_type",
+        "transport_status_code",
+        "transport_status_desc",
+        "transport_note",
+        "transport_status_time",
+        "transport_create_time",
+        "source_transport",
+        "pickup_time",
+        "destination_transport",
+        "arriving_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.transport_copy": {
+      "columns": [
+        "case_id",
+        "patient_id",
+        "transport_id",
+        "case_type",
+        "transport_status_code",
+        "transport_status_desc",
+        "transport_note",
+        "transport_status_time",
+        "transport_create_time",
+        "source_transport",
+        "pickup_time",
+        "destination_transport",
+        "arriving_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.triage_data": {
+      "columns": [
+        "case_id",
+        "main_reason",
+        "add_reason",
+        "triage_score",
+        "er_assign_code",
+        "er_assign_desc",
+        "saving_date_time",
+        "update_user"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "patients.triage_data_copy": {
+      "columns": [
+        "case_id",
+        "main_reason",
+        "add_reason",
+        "triage_score",
+        "er_assign_code",
+        "er_assign_desc",
+        "saving_date_time",
+        "update_user"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "public.SequelizeMeta": {
+      "columns": [
+        "name"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "public.cards_agg_diff": {
+      "columns": [
+        "case_id",
+        "bed_id",
+        "column_name",
+        "old_value",
+        "new_value"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "public.example_table": {
+      "columns": [
+        "id",
+        "name",
+        "description",
+        "created_at",
+        "updated_at"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "public.tmp_src": {
+      "columns": [
+        "case_id",
+        "patient_id",
+        "id_number",
+        "first_name",
+        "last_name",
+        "father_name",
+        "sex",
+        "birth_date",
+        "admission_date",
+        "department_id",
+        "ward_desc",
+        "room_id",
+        "room_desc",
+        "order_by",
+        "bed_id",
+        "bed_desc",
+        "blocked_bed",
+        "chameleon_ward_id",
+        "chameleon_satellite_ward_id",
+        "chameleon_ward_desc",
+        "chameleon_satellite_ward_desc",
+        "revisit",
+        "days_in_ward",
+        "infection",
+        "isolation",
+        "monitor",
+        "consultation",
+        "respirators",
+        "fall_risk",
+        "nursing",
+        "nurses",
+        "lab_results",
+        "panic_result",
+        "invalid_result",
+        "discharge_stage",
+        "discharge_docs",
+        "no_nursing_doc",
+        "no_medical_doc",
+        "has_events",
+        "has_similar_name",
+        "imaging",
+        "updated_time"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "staff.active_employees": {
+      "columns": [
+        "employee_id",
+        "employee_first_name",
+        "employee_last_name",
+        "employee_phone",
+        "employee_email",
+        "employee_sector",
+        "employee_employment",
+        "employee_department",
+        "employee_status",
+        "absence_type",
+        "absence_start_date",
+        "absence_exp_return_date",
+        "absence_return_date",
+        "employment_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "staff.active_employees_copy": {
+      "columns": [
+        "employee_id",
+        "employee_first_name",
+        "employee_last_name",
+        "employee_phone",
+        "employee_email",
+        "employee_sector",
+        "employee_employment",
+        "employee_department",
+        "employee_status",
+        "absence_type",
+        "absence_start_date",
+        "absence_exp_return_date",
+        "absence_return_date",
+        "employment_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "staff.presence_employees": {
+      "columns": [
+        "employee_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    },
+    "staff.presence_employees_copy": {
+      "columns": [
+        "employee_id"
+      ],
+      "lastSeen": "2025-12-21T21:43:03.959Z"
+    }
+  },
+  "lastSync": "2025-12-21T21:43:03.959Z"
+}

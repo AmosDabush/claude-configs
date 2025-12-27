@@ -11,6 +11,9 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "edge-tts": "^1.0.1",
+    "node-edge-tts": "^1.2.8",
+    "node-pty": "^1.1.0",
     "node-telegram-bot-api": "^0.67.0"
   }
 }

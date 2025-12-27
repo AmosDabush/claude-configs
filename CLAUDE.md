@@ -30,6 +30,23 @@ When user asks about CoView database topics, you MUST:
 
 **Discovery Mode:** If answer not found in skill files, Claude will ASK if you want to explore the database/codebase. If confirmed, Claude discovers the answer and adds it to the skill.
 
+### monday
+**Location:** `~/.claude/skills/monday/SKILL.md`
+
+Fetch and manage bugs from Monday.com COVIEW board. Query bugs by assignee, status, severity.
+
+**Activate when user asks about:**
+- Monday.com bugs assigned to them
+- Bug status, severity, or details
+- Fetching or listing bugs from the backlog
+
+**Commands:**
+```bash
+node ~/.claude/skills/monday/monday-api.js bugs     # Fetch all bugs assigned to Amos
+node ~/.claude/skills/monday/monday-api.js item <id> # Fetch specific bug details
+node ~/.claude/skills/monday/monday-api.js test      # Test API connection
+```
+
 ---
 
 ## Quick Commands
@@ -38,7 +55,12 @@ When user asks about CoView database topics, you MUST:
 |---------|-------------|
 | `/db` | Switch database, run queries interactively |
 | `/db-agent` | Natural language database queries and operations |
+| `/monday` | Fetch bugs from Monday.com board |
+| `/skill-db-sync` | Sync DB schema with coview-db-expert skill |
+| `/skill-db-review` | Review and describe pending DB items |
 | `/claude-git-sync` | Sync ~/.claude configs to git repo |
+| `/perspectives` | Get multiple viewpoints on a question (parallel agents) |
+| `/investigate` | Break down problem into branches, investigate in parallel |
 
 ## Available Databases
 

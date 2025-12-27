@@ -11,6 +11,10 @@
       "env": {
         "DATABASE_URL": "postgresql://admin01:Maayan1234!@coview-dev.cluster-cb6ay6kuwljx.il-central-1.rds.amazonaws.com:5432/coview"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
     }
   }
 }

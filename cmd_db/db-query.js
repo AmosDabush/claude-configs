@@ -2,57 +2,21 @@
 
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
-const { Sequelize } = require('sequelize');
 
-const CONFIG_PATH = path.join(__dirname, 'db-config.json');
+// Use shared db connection module
+const { getConnection, getConnectionFromEnv, listDatabases } = require('./db-connection');
+
 const HISTORY_PATH = path.join(__dirname, 'history.json');
 const MAX_HISTORY = 20;
 
-function expandTilde(filePath) {
-  if (filePath.startsWith('~/')) {
-    return path.join(os.homedir(), filePath.slice(2));
-  }
-  return filePath;
-}
-
-function loadConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
-}
-
-function loadCredentials(config) {
-  const credFile = expandTilde(config.credentialsFile || '~/.claude/db-credentials.env');
-  if (fs.existsSync(credFile)) {
-    require('dotenv').config({ path: credFile });
-  }
-}
-
-function getDbConfig(config, dbName) {
-  const db = config.databases[dbName];
-  if (!db) return null;
-
-  const connection = db.extends ? config.connections[db.extends] : {};
-
-  return {
-    host: process.env[connection.hostVar],
-    user: process.env[connection.userVar],
-    password: process.env[connection.passwordVar],
-    database: db.dbName,
-    port: connection.port || 5432,
-    description: db.description
-  };
-}
-
-function listDatabases(config) {
-  loadCredentials(config);
+function printDatabases() {
+  const databases = listDatabases();
   console.log('Available databases:\n');
-  for (const [name, db] of Object.entries(config.databases)) {
-    const connection = db.extends ? config.connections[db.extends] : {};
-    const host = process.env[connection.hostVar] || 'N/A';
-    console.log(`  ${name}`);
-    console.log(`    ${db.description || 'No description'}`);
-    console.log(`    Host: ${host}`);
-    console.log(`    DB: ${db.dbName || 'N/A'}`);
+  for (const db of databases) {
+    console.log(`  ${db.name}`);
+    console.log(`    ${db.description}`);
+    console.log(`    Host: ${db.host}`);
+    console.log(`    DB: ${db.dbName}`);
     console.log('');
   }
 }
@@ -198,15 +162,13 @@ async function main() {
     return true;
   });
 
-  const config = loadConfig();
-
   if (showHelpFlag) {
     showHelp();
     process.exit(0);
   }
 
   if (listFlag) {
-    listDatabases(config);
+    printDatabases();
     process.exit(0);
   }
 
@@ -246,65 +208,27 @@ async function main() {
   }
 
   try {
-    let host, user, password, database, port, dialect;
-
-    if (useGlobalEnv) {
-      // Load from global credentials file
-      loadCredentials(config);
-      console.log(`Using credentials: ~/.claude/db-credentials.env (global)`);
-    } else {
-      // Default: load from project .env
-      const envPath = path.join(process.cwd(), '.env');
-      require('dotenv').config({ path: envPath });
-      console.log(`Using credentials: ${process.cwd()}/.env (local)`);
-    }
+    let sequelize, dbConfig;
 
     if (dbName) {
-      // Use database from config (need global credentials loaded)
-      if (!useGlobalEnv) {
-        // Also load global for db config lookup
-        loadCredentials(config);
-      }
-
-      const dbConfig = getDbConfig(config, dbName);
-      if (!dbConfig) {
-        console.error(`Database "${dbName}" not found in config.`);
-        console.log('Use --list to see available databases.');
-        process.exit(1);
-      }
-      host = dbConfig.host;
-      user = dbConfig.user;
-      password = dbConfig.password;
-      database = dbConfig.database;
-      port = dbConfig.port || 5432;
-      dialect = 'postgres';
-
+      // Use database from config
+      const conn = await getConnection(dbName);
+      sequelize = conn.sequelize;
+      dbConfig = conn.dbConfig;
       console.log(`Using database: ${dbName} (${dbConfig.description || ''})`);
     } else {
-      // Use env variables directly
-      host = process.env.PG_HOST || process.env.POSTGRES_HOST;
-      user = process.env.PG_USER || process.env.POSTGRES_USER;
-      password = process.env.PG_PASSWORD || process.env.POSTGRES_PASSWORD;
-      database = process.env.PG_DB_NAME || process.env.PG_NAME || process.env.POSTGRES_DB;
-      port = process.env.PG_PORT || process.env.POSTGRES_PORT || 5432;
-      dialect = 'postgres';
+      // Use env variables from local .env or global
+      const envPath = useGlobalEnv
+        ? require('os').homedir() + '/.claude/db-credentials.env'
+        : path.join(process.cwd(), '.env');
+      const conn = await getConnectionFromEnv(envPath);
+      sequelize = conn.sequelize;
+      dbConfig = conn.dbConfig;
+      console.log(`Using credentials: ${envPath}`);
     }
 
-    console.log(`Database: ${host} / ${database}`);
+    console.log(`Database: ${dbConfig.host} / ${dbConfig.database}`);
     console.log('');
-
-    if (!host || !user || !password || !database) {
-      console.error('Missing required connection parameters.');
-      console.error('Required: PG_HOST, PG_USER, PG_PASSWORD, PG_DB_NAME');
-      process.exit(1);
-    }
-
-    const sequelize = new Sequelize(database, user, password, {
-      host,
-      port: parseInt(port),
-      dialect,
-      logging: false,
-    });
 
     const [results] = await sequelize.query(finalSql);
     console.log(JSON.stringify(results, null, 2));

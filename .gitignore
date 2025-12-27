@@ -19,3 +19,8 @@ downloads/
 statsig/
 ide/
 settings.local.json
+
+# Temp files
+temp_audio_*.mp3
+*.pid
+*.backup

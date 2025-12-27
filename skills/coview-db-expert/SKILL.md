@@ -58,8 +58,8 @@ Activate when user asks about:
 
 | Table | Schema | Purpose | Primary Key |
 |-------|--------|---------|-------------|
-| cases | patients | Hospitalization episodes | case_id (VARCHAR) |
-| patients | patients | Patient master data | patient_id (VARCHAR) |
+| cases | patients | Hospitalization episodes | case_id (**VARCHAR** - quote in SQL!) |
+| patients | patients | Patient master data | patient_id (**VARCHAR** - quote in SQL!) |
 | beds | patients | Physical beds | bed_id |
 | rooms | patients | Physical rooms | room_id |
 | wards | common | Hospital wards/departments | ward_id |
@@ -67,6 +67,7 @@ Activate when user asks about:
 | case_isolation | patients | Isolation orders | (case_id, isolation_id) |
 | nursing_status | patients | Nursing status flags | (case_id, nurs_status_id) |
 | condition | patients | Patient condition/ventilation | case_id |
+| consultations | patients | Patient consultations | case_id (**VARCHAR** - quote in SQL!) |
 | cards_agg | patients | Pre-aggregated patient cards | (bed_id, room_id) |
 | parameters | common | System configuration | param_id |
 | permissions_chameleon | common | User→ward access control (synced from Chameleon) | id |
@@ -231,6 +232,8 @@ This is **FULL REPLACEMENT** - no incremental updates. All services use this pat
 | IS DISTINCT FROM | NULL-safe comparison used in delta queries |
 | MongoDB usage | Only ambulance service (amb_patients, amb_drives) |
 | Event types (nursing schema) | `nursing.event_type` hierarchical: קטגוריה→סוג אירוע→נושא. Root: רוחבי (ward-level), מטופל (patient-specific) |
+| **VARCHAR ID columns** | `case_id`, `patient_id`, `mabar_code` are **VARCHAR not INTEGER** - MUST quote in SQL: `WHERE case_id = '11871947'` not `WHERE case_id = 11871947` |
+| consultations table | `patients.consultations` - case_id is VARCHAR, query with quotes: `WHERE case_id = '123'` |
 | permissions_chameleon usage | User→ward access control. Used by common-service for ward filtering, access-control for user profile |
 | user_chameleon usage | User profile from Chameleon (fullName, userDesc, sector). Used by access-control for profile enrichment |
 | getNursingWards returns empty | **Flow:** access-control `/acc/general/getNursingWards` → `@User()` from `x-remote-user` header → TIBCO `GetValidGroups` (checks `coView_admin`) → common-service `WardsService.getNursingWards()`. **Requires:** (1) cases with `chameleon_ward_id` set, (2) wards with CHAMELEON system_num, (3) user in `permissions_chameleon` (if not admin). Check `patients.cases.chameleon_ward_id` first! |
@@ -409,6 +412,7 @@ This section grows as Claude discovers new information from reference files. Add
 
 | Date | Question | Answer | Source |
 |------|----------|--------|--------|
+| 2025-12-25 | Why does `WHERE case_id = 11871947` return empty? | **CRITICAL:** `case_id`, `patient_id`, `mabar_code` are VARCHAR columns, NOT INTEGER. Must quote values in SQL: `WHERE case_id = '11871947'`. Without quotes, PostgreSQL implicit type coercion may fail or return wrong results. This applies to ALL tables with case_id/patient_id. **Tags:** #VARCHAR #case_id #patient_id #SQL-gotcha | DB query error |
 | 2024-12-16 | getNursingWards returns empty [] | **Full Flow:** access-control `/acc/general/getNursingWards` → `@User()` extracts from `x-remote-user` header → `resolveUserGroups()` calls TIBCO `GetValidGroups` (checks `coView_admin` group) → common-service `/general/getNursingWards?isAdmin=X` → `WardsService.getNursingWards()` in `wards.services.ts`. **Root cause:** EXISTS clause requires cases with `chameleon_ward_id` or `chameleon_satellite_ward_id`. If ALL cases have NULL, no wards returned. **Fix:** `UPDATE patients.cases SET chameleon_ward_id = 'X' WHERE ...` **Requirements:** (1) CHAMELEON in source_system, (2) wards with matching system_num, (3) cases referencing those wards, (4) user in permissions_chameleon (if not admin). **Tags:** #getNursingWards #access-control #common-service #control-panel-dashboard #permissions_chameleon #user_chameleon #TIBCO #dev-mode | Code + DB query |
 | 2024-12-16 | "לא פעיל in title" logic | Soft-deactivation pattern: beds/rooms with "לא פעיל" in `bedDesc`/`roomDesc` are filtered out using `NOT LIKE '%לא פעיל%'`. Used in departmental-control-dashboard (screenHelpers.ts, screenHandlers.ts). Chameleon marks items inactive via description text. | Code search |
 | 2024-12-14 | Event types in nursing schema | `nursing.event_type` hierarchical: קטגוריה → סוג אירוע → נושא. Two root categories: רוחבי (ward-level) and מטופל (patient-specific). Uses `level_above` for parent. | DB query |
@@ -492,12 +496,30 @@ MOCK_REMOTE_USER: coview-ts-dev
 
 ---
 
+## Pending Review (Auto-Synced)
+
+Items below were discovered by `/skill-db-sync` and need business description.
+Run `/skill-db-review` to add descriptions and move to main sections.
+
+### New Tables (needs review)
+
+| Schema | Table | Columns | Foreign Keys | Status |
+|--------|-------|---------|--------------|--------|
+
+### New Columns (needs review)
+
+| Table | Column | Type | Nullable | Status |
+|-------|--------|------|----------|--------|
+
+---
+
 ## Changelog
 
 Track what was learned and when. Claude adds entries here after learning.
 
 | Date | What was learned | Source | Added by |
 |------|------------------|--------|----------|
+| 2025-12-25 | **CRITICAL:** VARCHAR ID columns (case_id, patient_id, mabar_code) MUST be quoted in SQL queries | DB query error - user correction | Claude |
 | 2024-12-16 | Cross-Reference Index: Dashboard Dependencies, Endpoint→Knowledge, Table→Usage maps with #tags | Skill reorganization | Claude |
 | 2024-12-16 | Dev mode auth flow: MOCK_TIBCO, tibco-mocker users, permissions_chameleon as primary ward access | Code analysis | Claude |
 | 2024-12-16 | getNursingWards full flow including TIBCO auth (x-remote-user → TIBCO GetValidGroups → common-service) | Code + DB query | Claude |

@@ -1,0 +1,64 @@
+{
+  "users": {
+    "402497072": {
+      "currentProject": "home",
+      "currentPath": "/Users/amosdabush",
+      "currentMode": "yolo",
+      "sessionMode": true,
+      "persistSession": false,
+      "voiceMode": "off",
+      "voiceSettings": {
+        "ttsEngine": "edge",
+        "voice": "en-US-JennyNeural",
+        "hebrewVoice": "he-IL-HilaNeural",
+        "rate": "+25%",
+        "piperSpeed": 0.8,
+        "pitch": "+0Hz",
+        "googleTld": "com",
+        "googleHebrewTld": "co.il",
+        "googleSlow": false,
+        "responseLevel": "very_casual",
+        "chunkPreset": "medium"
+      },
+      "messageQueue": [],
+      "interactiveMode": true,
+      "showTerminal": true,
+      "thoughtMode": "off"
+    },
+    "8046123315": {
+      "currentProject": "malrad-cloud",
+      "currentPath": "/Users/amosdabush/git/cloud2/coview-backend-services/malrad-cloud",
+      "currentMode": "yolo",
+      "sessionMode": true,
+      "persistSession": false,
+      "voiceMode": "on",
+      "voiceSettings": {
+        "ttsEngine": "edge",
+        "voice": "en-US-JennyNeural",
+        "hebrewVoice": "he-IL-HilaNeural",
+        "rate": "+25%",
+        "piperSpeed": 0.8,
+        "pitch": "+0Hz",
+        "googleTld": "com",
+        "googleHebrewTld": "co.il",
+        "googleSlow": false,
+        "responseLevel": "very_casual",
+        "chunkPreset": "medium"
+      },
+      "messageQueue": [],
+      "interactiveMode": true,
+      "showTerminal": true,
+      "thoughtMode": "on",
+      "pendingInteractiveMessage": "ok",
+      "interactiveReady": false,
+      "pendingMessage": null,
+      "interactiveSessionId": "6f2c1bd0-bc87-42a0-bd61-53422b4a0471",
+      "interactiveThinkingMsgId": null,
+      "interactiveStartTime": null,
+      "interactiveToolsUsed": [],
+      "interactiveTimerInterval": null,
+      "pendingCliResume": "d97f8a94-a230-4435-a6db-0dc68c7796be"
+    }
+  },
+  "savedAt": "2025-12-27T12:17:44.726Z"
+}

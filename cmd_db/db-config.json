@@ -12,6 +12,12 @@
       "userVar": "QA_POSTGRES_USER",
       "passwordVar": "QA_POSTGRES_PASSWORD",
       "port": 5432
+    },
+    "coview-prod": {
+      "hostVar": "PROD_POSTGRES_HOST",
+      "userVar": "PROD_POSTGRES_USER",
+      "passwordVar": "PROD_POSTGRES_PASSWORD",
+      "port": 5432
     }
   },
   "databases": {
@@ -33,6 +39,11 @@
     "qa_naharia": {
       "extends": "coview-naharia",
       "description": "QA/Naharia database",
+      "dbName": "coview"
+    },
+    "prod": {
+      "extends": "coview-prod",
+      "description": "Production Naharia (REQUIRES prod-vpn)",
       "dbName": "coview"
     }
   }
