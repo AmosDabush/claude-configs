@@ -218,28 +218,54 @@ VOICE_STYLE_OPTIONS = [
    │  e. Generate and send voice (with chunking if needed)
 ```
 
-### Scenario 4: Thought Log Mode=ON, Click 🧠 Button
+### Scenario 4: Process Logs (thoughtMode=on)
 
 **Settings:** `thoughtMode=on`, many tools used
+
+**Three separate logs are tracked:**
+- `toolsLog` - Detailed tool operations (Read: /path, Bash: cmd)
+- `statusLog` - Status messages shown during processing
+- `fullLog` - Full JSON stream from Claude
 
 ```
 1. User sends complex query requiring multiple tools
    │
 2. Claude uses tools: Read, Grep, Read, Edit, Bash
    │
-3. Each tool_use event:
-   │  a. Update status: "🔄 Reading file.js"
-   │  b. Add to processLog: ["Reading file.js", "Grep: pattern", ...]
-   │  c. Increment toolsUsed count
+3. Each JSON event from Claude:
+   │  a. Add to fullLog: { type, subtype, blocks, timestamp }
+   │  b. If tool_use: Add to toolsLog ("Read: /path/file.js")
+   │  c. Update status & add to statusLog ("Reading file.js")
    │
 4. On 'result':
-   │  a. thoughtMode=on → Store processLog in pendingLogs: `log_${chatId}`
-   │  b. Send summary: "✅ Done (15s) [[(5)🧠](https://t.me/BotName?start=t)]"
+   │  a. Save logs to pendingLogs:
+   │     - `tools_${chatId}` → toolsLog
+   │     - `status_${chatId}` → statusLog
+   │     - `fulllog_${chatId}` → fullLog
+   │  b. Send summary: "Done (15s) [🔧5, 📝3, 📋12, 🔊]"
    │
-5. User clicks 🧠 link → /start t
-   │  a. Retrieve log from pendingLogs
-   │  b. Format: "🧠 Thought Process:\n```\n1. Reading file.js\n2. Grep: pattern\n..."
-   │  c. Send as message (or file if too long)
+5. User clicks button → /start <type>
+   │  - 🔧 → /start tools → Show toolsLog as list
+   │  - 📝 → /start status → Show statusLog as list
+   │  - 📋 → /start fulllog → Show fullLog formatted
+   │  - 🔊 → /start v → Generate voice
+```
+
+**Full Log Format:**
+```
+1. [system:init]
+
+2. [assistant]
+   📝 Let me check the files...
+
+3. [assistant]
+   🔧 Read: {"file_path":"/path/to/file.js"}
+
+4. [user]
+   ✅ result
+
+5. [result:success]
+   → Final response text...
 ```
 
 ### Scenario 5: Non-Interactive Mode (Legacy)
@@ -583,25 +609,41 @@ if (now - lastUpdate > 500) {  // Only update every 500ms
 Instead of inline buttons (which expire), the bot uses Telegram deep links:
 
 ```javascript
-// Generate clickable link
+// Generate clickable links
 const botUsername = (await bot.getMe()).username;
-const thoughtLink = `[(${count})🧠](https://t.me/${botUsername}?start=t)`;
+const toolsLink = `[🔧${toolsLog.length}](https://t.me/${botUsername}?start=tools)`;
+const statusLink = `[📝${statusLog.length}](https://t.me/${botUsername}?start=status)`;
+const fullLogLink = `[📋${fullLog.length}](https://t.me/${botUsername}?start=fulllog)`;
 const voiceLink = `[🔊](https://t.me/${botUsername}?start=v)`;
 
 // Send as Markdown
-bot.sendMessage(chatId, `✅ Done (5s) [${thoughtLink}, ${voiceLink}]`, { parse_mode: 'Markdown' });
+bot.sendMessage(chatId, `Done (5s) [${toolsLink}, ${statusLink}, ${fullLogLink}, ${voiceLink}]`, { parse_mode: 'Markdown' });
 ```
+
+### Available Deep Link Commands
+
+| Command | Description | Data Source |
+|---------|-------------|-------------|
+| `/start tools` | Show tools log | `pendingLogs.get('tools_${chatId}')` |
+| `/start status` | Show status log | `pendingLogs.get('status_${chatId}')` |
+| `/start fulllog` | Show full process log | `pendingLogs.get('fulllog_${chatId}')` |
+| `/start v` | Generate voice | `pendingLogs.get('voice_${chatId}')` |
+| `/start t` | Alias for status | Same as `/start status` |
 
 ### Handler
 
 ```javascript
-// bot.js or claude.js
-bot.onText(/\/start (t|v)$/, async (msg, match) => {
+// lib/commands/claude.js
+bot.onText(/\/start (t|v|tools|status|fulllog)$/, async (msg, match) => {
   const cmd = match[1];
-  if (cmd === 't') {
-    // Show thought log from pendingLogs.get(`log_${chatId}`)
+  if (cmd === 't' || cmd === 'status') {
+    // Show status log
+  } else if (cmd === 'tools') {
+    // Show tools log
+  } else if (cmd === 'fulllog') {
+    // Show full process log (formatted)
   } else if (cmd === 'v') {
-    // Generate voice from pendingLogs.get(`voice_${chatId}`)
+    // Generate voice
   }
 });
 ```

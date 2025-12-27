@@ -127,15 +127,25 @@ npm install
 | `/persist` | שמירת session אחרי restart |
 | `/persist on/off` | הפעלה/כיבוי ישיר |
 
-### 🧠 Thought Process
+### 📋 Process Logs
 | פקודה | תיאור |
 |-------|--------|
-| `/thought` | הגדרת מצב thought log |
-| `/thought off` | ללא thought log |
-| `/thought on` | כפתור לצפייה ב-thought log |
+| `/thought` | הגדרת מצב process log |
+| `/thought off` | ללא לוגים (רק ספירה) |
+| `/thought on` | כפתורים לחיצים לצפייה בלוגים |
 | `/thought auto` | הצגה אוטומטית אחרי כל תשובה |
-| `/t` | הצגת thought log אחרון |
-| `/get_thought` | = `/t` |
+| `/t` | הצגת status log אחרון |
+
+**סיכום אחרי תשובה (כש-thoughtMode=on):**
+```
+Done (5s) [🔧3, 📝5, 📋8, 🔊]
+```
+
+**כפתורים:**
+- `🔧` - **Tools**: פעולות מפורטות (Read: /path, Bash: cmd)
+- `📝` - **Status**: מה הוצג בסטטוס בזמן עיבוד
+- `📋` - **Full Log**: כל התהליך המלא (JSON events)
+- `🔊` - **Voice**: יצירת קול (רק כש-voiceMode=on)
 
 ### 🎙 Voice (TTS)
 | פקודה | תיאור |

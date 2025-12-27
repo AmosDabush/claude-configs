@@ -42,28 +42,79 @@ function register(bot, isAuthorized) {
     bot.sendMessage(msg.chat.id, '🆕 Started fresh session. Claude won\'t remember previous messages.');
   });
 
-  // Handle /start t and /start v (deep links) - call handlers directly
-  bot.onText(/\/start (t|v)$/, async (msg, match) => {
+  // Handle /start commands (deep links) - t, v, tools, status, fulllog
+  bot.onText(/\/start (t|v|tools|status|fulllog)$/, async (msg, match) => {
     console.log(`[/start] Received: ${msg.text}`);
     if (!isAuthorized(msg)) return;
     const chatId = msg.chat.id;
     const cmd = match[1];
     console.log(`[/start] Command: ${cmd}, chat: ${chatId}`);
 
-    if (cmd === 't') {
-      // Show thought log
-      const log = pendingLogs.get(`log_${chatId}`);
+    if (cmd === 't' || cmd === 'status') {
+      // Show status log (what was displayed during processing)
+      const log = pendingLogs.get(`status_${chatId}`) || pendingLogs.get(`log_${chatId}`);
       if (!log || log.length === 0) {
-        bot.sendMessage(chatId, '❌ No thought log available');
+        bot.sendMessage(chatId, '❌ No status log available');
         return;
       }
       const logLines = log.map((step, i) => `${i + 1}. ${step}`).join('\n');
-      const logText = `🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
+      const logText = `📝 *Status:*\n\`\`\`\n${logLines}\n\`\`\``;
       if (logText.length <= 4000) {
         bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
       } else {
         const buffer = Buffer.from(logLines, 'utf-8');
-        bot.sendDocument(chatId, buffer, { caption: '🧠 Thought Process' }, { filename: 'thought.txt', contentType: 'text/plain' });
+        bot.sendDocument(chatId, buffer, { caption: '📝 Status' }, { filename: 'status.txt', contentType: 'text/plain' });
+      }
+    } else if (cmd === 'tools') {
+      // Show tools log
+      const log = pendingLogs.get(`tools_${chatId}`);
+      if (!log || log.length === 0) {
+        bot.sendMessage(chatId, '❌ No tools log available');
+        return;
+      }
+      const logLines = log.map((step, i) => `${i + 1}. ${step}`).join('\n');
+      const logText = `🔧 *Tools:*\n\`\`\`\n${logLines}\n\`\`\``;
+      if (logText.length <= 4000) {
+        bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
+      } else {
+        const buffer = Buffer.from(logLines, 'utf-8');
+        bot.sendDocument(chatId, buffer, { caption: '🔧 Tools' }, { filename: 'tools.txt', contentType: 'text/plain' });
+      }
+    } else if (cmd === 'fulllog') {
+      // Show full process log as text
+      const log = pendingLogs.get(`fulllog_${chatId}`);
+      if (!log || log.length === 0) {
+        bot.sendMessage(chatId, '❌ No process log available');
+        return;
+      }
+      // Format each entry as readable text
+      const logLines = log.map((entry, i) => {
+        let line = `${i + 1}. [${entry.type}${entry.subtype ? ':' + entry.subtype : ''}]`;
+        if (entry.blocks) {
+          for (const block of entry.blocks) {
+            if (block.type === 'text' && block.text) {
+              line += `\n   📝 ${block.text.substring(0, 100)}${block.text.length > 100 ? '...' : ''}`;
+            } else if (block.type === 'tool_use') {
+              line += `\n   🔧 ${block.name}: ${block.input?.substring(0, 80) || ''}`;
+            } else if (block.type === 'tool_result') {
+              line += `\n   ✅ result`;
+            } else if (block.thinking) {
+              line += `\n   🧠 ${block.thinking.substring(0, 80)}...`;
+            }
+          }
+        }
+        if (entry.result) {
+          line += `\n   → ${entry.result.substring(0, 100)}${entry.result.length > 100 ? '...' : ''}`;
+        }
+        return line;
+      }).join('\n\n');
+
+      const logText = `📋 *Full Process Log:*\n\`\`\`\n${logLines}\n\`\`\``;
+      if (logText.length <= 4000) {
+        bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
+      } else {
+        const buffer = Buffer.from(logLines, 'utf-8');
+        bot.sendDocument(chatId, buffer, { caption: '📋 Full Process Log' }, { filename: 'process.txt', contentType: 'text/plain' });
       }
     } else if (cmd === 'v') {
       // Generate voice
@@ -760,7 +811,9 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
   let typingInterval = null;
   let currentStatus = '';
   let resultReceived = false;  // Prevent processing after result
-  let processLog = [];  // Track all steps for thought process log
+  let toolsLog = [];     // Track tool usage (Read, Edit, Bash...)
+  let statusLog = [];    // Track all status messages shown
+  let fullLog = [];      // Track full JSON stream for debugging
 
   // Initialize tracking in userState
   userState.interactiveStartTime = null;
@@ -783,10 +836,10 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
 
   // Update status message with elapsed time
   const updateStatusMessage = async (status, showCancel = true) => {
-    // Log to process log FIRST (before any early returns)
-    const cleanStatus = status.replace(/^🔄\s*/, '').replace(/^🧠\s*/, '').replace(/^📋\s*/, '');
-    if (cleanStatus && !processLog.includes(cleanStatus)) {
-      processLog.push(cleanStatus);
+    // Log status text (remove emoji prefix for cleaner log)
+    const cleanStatus = status.replace(/^[🔄🧠📋❌]\s*/, '').trim();
+    if (cleanStatus && cleanStatus !== 'Processing...' && !statusLog.includes(cleanStatus)) {
+      statusLog.push(cleanStatus);
     }
 
     // Skip UI update if no thinking message
@@ -808,17 +861,11 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
     } catch (e) {}
   };
 
-  // Start timer to update elapsed time every 3 seconds
-  const startTimer = () => {
-    if (userState.interactiveTimerInterval) return;
-    userState.interactiveTimerInterval = setInterval(() => {
-      if (currentStatus && userState.interactiveStartTime) {
-        updateStatusMessage(currentStatus.split(' [')[0].split(' (')[0]);
-      }
-    }, 3000);
-  };
-
+  // Note: Timer removed - elapsed time updates on every Claude event (tool use, thinking, etc.)
+  // This avoids setInterval async issues and reduces unnecessary API calls
+  const startTimer = () => {};  // No-op, kept for compatibility
   const stopTimer = () => {
+    // Clean up any legacy timer
     if (userState.interactiveTimerInterval) {
       clearInterval(userState.interactiveTimerInterval);
       userState.interactiveTimerInterval = null;
@@ -828,9 +875,9 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
   // Send typing indicator periodically while processing
   const startTyping = () => {
     if (typingInterval) return;
-    bot.sendChatAction(chatId, 'typing');
+    bot.sendChatAction(chatId, 'typing').catch(() => {});
     typingInterval = setInterval(() => {
-      bot.sendChatAction(chatId, 'typing');
+      bot.sendChatAction(chatId, 'typing').catch(() => {});  // Ignore errors
     }, 4000);
   };
 
@@ -858,6 +905,26 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
 
       try {
         const json = JSON.parse(line);
+
+        // Log full JSON for debugging (skip large content)
+        const logEntry = {
+          type: json.type,
+          subtype: json.subtype,
+          timestamp: new Date().toISOString()
+        };
+        if (json.message?.content) {
+          logEntry.blocks = json.message.content.map(b => ({
+            type: b.type,
+            name: b.name,
+            text: b.text?.substring(0, 200),
+            thinking: b.thinking?.substring(0, 200),
+            input: b.input ? JSON.stringify(b.input).substring(0, 300) : undefined
+          }));
+        }
+        if (json.result) {
+          logEntry.result = json.result.substring(0, 500);
+        }
+        fullLog.push(logEntry);
 
         // System init - Claude is ready
         if (json.type === 'system' && json.subtype === 'init') {
@@ -930,10 +997,13 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
               }
             }
 
-            // Show thinking indicator
+            // Show thinking indicator (if Claude sends thinking blocks)
             if (block.type === 'thinking') {
               startTyping();
-              updateStatusMessage('🧠 Thinking...');
+              const thinkingText = block.thinking || '';
+              const firstLine = thinkingText.split('\n').find(l => l.trim().length > 5) || '';
+              const summary = firstLine.substring(0, 50) + (firstLine.length > 50 ? '...' : '');
+              updateStatusMessage(summary ? `🧠 ${summary}` : '🧠 Thinking...');
             }
 
             // Handle TodoWrite tool - show todos progress
@@ -970,30 +1040,42 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
 
               // Build detailed status
               let statusText = '🔄 ';
+              let logEntry = '';
               if (toolName === 'Read') {
                 const file = input.file_path ? path.basename(input.file_path) : 'file';
                 statusText += `Reading ${file}`;
+                logEntry = `Read: ${input.file_path || file}`;
               } else if (toolName === 'Write') {
                 const file = input.file_path ? path.basename(input.file_path) : 'file';
                 statusText += `Writing ${file}`;
+                logEntry = `Write: ${input.file_path || file}`;
               } else if (toolName === 'Edit') {
                 const file = input.file_path ? path.basename(input.file_path) : 'file';
                 statusText += `Editing ${file}`;
+                logEntry = `Edit: ${input.file_path || file}`;
               } else if (toolName === 'Bash') {
-                const cmd = input.command ? input.command.substring(0, 30) : 'command';
-                statusText += `Running: ${cmd}${input.command?.length > 30 ? '...' : ''}`;
+                const cmd = input.command ? input.command.substring(0, 50) : 'command';
+                statusText += `Running: ${cmd.substring(0, 30)}${cmd.length > 30 ? '...' : ''}`;
+                logEntry = `Bash: ${cmd}`;
               } else if (toolName === 'Glob') {
                 statusText += `Searching: ${input.pattern || 'files'}`;
+                logEntry = `Glob: ${input.pattern || 'pattern'}`;
               } else if (toolName === 'Grep') {
                 statusText += `Grep: ${input.pattern?.substring(0, 20) || 'pattern'}`;
+                logEntry = `Grep: ${input.pattern || 'pattern'}`;
               } else if (toolName === 'Task') {
                 statusText += `Agent: ${input.description || 'task'}`;
+                logEntry = `Task: ${input.description || 'agent'}`;
               } else if (toolName === 'WebFetch') {
                 statusText += `Fetching URL`;
+                logEntry = `WebFetch: ${input.url || 'url'}`;
               } else {
                 statusText += `${toolName}`;
+                logEntry = toolName;
               }
 
+              // Add to tools log
+              toolsLog.push(logEntry);
               updateStatusMessage(statusText);
             }
           }
@@ -1063,46 +1145,74 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
             const voiceMode = userState.voiceMode || 'off';
             const thoughtMode = userState.thoughtMode || 'off';
 
-            console.log(`[thought btn] mode=${thoughtMode}, toolCount=${toolCount}, processLog.length=${processLog.length}`);
+            console.log(`[summary] mode=${thoughtMode}, tools=${toolsLog.length}, status=${statusLog.length}`);
 
-            // Build single-line summary with CLICKABLE EMOJI LINKS
-            // Format: ✅ Done (5s) [🧠3, 🔊]
-            const count = toolCount > 0 ? toolCount : processLog.length;
+            // Build single-line summary with clickable text links
+            // Format: Done (5s) [🔧3, 📝5, 🔊]
             const botUsername = (await bot.getMe()).username;
-
             let commands = [];
 
-            // Save log for /t command - clickable 🧠
-            if (count > 0) {
-              pendingLogs.set(`log_${chatId}`, processLog.slice());
+            // Save tools log - clickable 🔧
+            if (toolsLog.length > 0) {
+              pendingLogs.set(`tools_${chatId}`, toolsLog.slice());
               if (thoughtMode === 'on') {
-                commands.push(`[(${count})🧠](https://t.me/${botUsername}?start=t)`);
+                commands.push(`[🔧${toolsLog.length}](https://t.me/${botUsername}?start=tools)`);
               }
             }
 
-            // Save text for /v command - clickable 🔊
+            // Save status log - clickable 📝
+            if (statusLog.length > 0) {
+              pendingLogs.set(`status_${chatId}`, statusLog.slice());
+              if (thoughtMode === 'on') {
+                commands.push(`[📝${statusLog.length}](https://t.me/${botUsername}?start=status)`);
+              }
+            }
+
+            // Save full log - clickable 📋
+            if (fullLog.length > 0 && thoughtMode === 'on') {
+              pendingLogs.set(`fulllog_${chatId}`, fullLog.slice());
+              commands.push(`[📋${fullLog.length}](https://t.me/${botUsername}?start=fulllog)`);
+            }
+
+            // Save text for /v command - clickable "voice"
             if (voiceMode === 'on' && finalText && finalText.length > 10) {
               pendingLogs.set(`voice_${chatId}`, finalText);
               commands.push(`[🔊](https://t.me/${botUsername}?start=v)`);
             }
 
             // Build summary text
-            let summaryText = `✅ Done (${elapsed})`;
+            let summaryText = `Done (${elapsed})`;
+            const totalCount = toolsLog.length + statusLog.length;
             if (commands.length > 0) {
               summaryText += ` [${commands.join(', ')}]`;
-            } else if (count > 0 && thoughtMode !== 'auto') {
-              summaryText += ` [(${count})🧠]`;
+            } else if (totalCount > 0 && thoughtMode !== 'auto') {
+              // Show counts without links
+              let counts = [];
+              if (toolsLog.length > 0) counts.push(`🔧${toolsLog.length}`);
+              if (statusLog.length > 0) counts.push(`📝${statusLog.length}`);
+              summaryText += ` [${counts.join(', ')}]`;
             }
 
-            // Auto thought mode - show log automatically
-            if (thoughtMode === 'auto' && processLog.length > 0) {
-              const logLines = processLog.map((step, i) => `${i + 1}. ${step}`).join('\n');
-              const logText = `${summaryText}\n\n🧠 *Process:*\n\`\`\`\n${logLines}\n\`\`\``;
+            // Auto thought mode - show logs automatically
+            if (thoughtMode === 'auto' && totalCount > 0) {
+              let logText = summaryText;
+
+              if (statusLog.length > 0) {
+                const statusLines = statusLog.map((step, i) => `${i + 1}. ${step}`).join('\n');
+                logText += `\n\n📝 *Status:*\n\`\`\`\n${statusLines}\n\`\`\``;
+              }
+
+              if (toolsLog.length > 0) {
+                const toolLines = toolsLog.map((step, i) => `${i + 1}. ${step}`).join('\n');
+                logText += `\n\n🔧 *Tools:*\n\`\`\`\n${toolLines}\n\`\`\``;
+              }
+
               if (logText.length <= 4000) {
                 await bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
               } else {
                 await bot.sendMessage(chatId, summaryText);
-                const buffer = Buffer.from(logLines, 'utf-8');
+                const allLogs = `=== Status ===\n${statusLog.join('\n')}\n\n=== Tools ===\n${toolsLog.join('\n')}`;
+                const buffer = Buffer.from(allLogs, 'utf-8');
                 await bot.sendDocument(chatId, buffer, { caption: '🧠 Process' }, { filename: 'process.txt', contentType: 'text/plain' });
               }
             } else {
@@ -1114,7 +1224,9 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
           currentMessageId = null;
           lastText = '';
           resultReceived = false;  // Allow processing next message
-          processLog = [];  // Clear process log
+          toolsLog = [];     // Clear tools log
+          statusLog = [];    // Clear status log
+          fullLog = [];      // Clear full log
           userState.interactiveStartTime = null;
           userState.interactiveToolsUsed = [];
           currentStatus = '';
