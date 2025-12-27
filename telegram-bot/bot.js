@@ -24,7 +24,29 @@ const voiceCommands = require('./lib/commands/voice');
 const claudeCommands = require('./lib/commands/claude');
 const parallelCommands = require('./lib/commands/parallel');
 
-// ===== Write PID file (singleton handled by start.sh) =====
+// ===== Kill previous instance if exists =====
+const { execSync } = require('child_process');
+try {
+  if (fs.existsSync(FILES.pid)) {
+    const oldPid = fs.readFileSync(FILES.pid, 'utf-8').trim();
+    if (oldPid && oldPid !== process.pid.toString()) {
+      try {
+        execSync(`kill ${oldPid} 2>/dev/null`);
+        console.log(`Killed previous instance (PID: ${oldPid})`);
+      } catch (e) {}
+    }
+  }
+  // Also kill any other bot.js processes
+  const otherPids = execSync(`pgrep -f "node.*bot.js" 2>/dev/null || true`).toString().trim().split('\n').filter(p => p && p !== process.pid.toString());
+  for (const pid of otherPids) {
+    try {
+      execSync(`kill ${pid} 2>/dev/null`);
+      console.log(`Killed orphan instance (PID: ${pid})`);
+    } catch (e) {}
+  }
+} catch (e) {}
+
+// Write current PID
 fs.writeFileSync(FILES.pid, process.pid.toString());
 console.log(`Bot PID: ${process.pid}`);
 
@@ -74,6 +96,7 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 // Set bot commands menu
 bot.setMyCommands([
   { command: 'menu', description: '📱 Main menu (all categories)' },
+  { command: 'settings', description: '⚙️ Quick settings' },
   { command: 'claude', description: '🤖 Claude session & settings' },
   { command: 'sessions', description: '📚 Browse & resume sessions' },
   { command: 'projects', description: '📂 Saved projects' },
@@ -298,6 +321,85 @@ bot.onText(/\/menu/, (msg) => {
   sendAllMenu(bot, msg.chat.id);
 });
 
+// ===== /settings - Quick settings menu =====
+bot.onText(/\/settings/, (msg) => {
+  if (!isAuthorized(msg)) return;
+  sendQuickSettings(bot, msg.chat.id);
+});
+
+function sendQuickSettings(bot, chatId, messageId = null) {
+  const userState = getUserState(chatId);
+
+  // Current values
+  const voiceMode = userState.voiceMode || 'off';
+  const thoughtMode = userState.thoughtMode || 'off';
+  const sessionMode = userState.sessionMode ? 'session' : 'demand';
+  const permMode = userState.currentMode || 'default';
+  const interactive = userState.interactiveMode ? 'on' : 'off';
+
+  // Icons for current state
+  const voiceIcons = { off: '🔇', on: '🔊', auto: '🔊' };
+  const thoughtIcons = { off: '🔇', on: '🧠', auto: '✨' };
+  const sessionIcons = { demand: '⚡', session: '💬' };
+  const permIcons = { default: '🔒', fast: '⚡', plan: '📋', yolo: '🔥' };
+  const interactiveIcons = { off: '⚡', on: '🔄' };
+
+  const keyboard = [
+    // Voice row
+    [
+      { text: `Voice: ${voiceIcons[voiceMode]}`, callback_data: 'noop' },
+      { text: voiceMode === 'off' ? '● off' : 'off', callback_data: 'qset:voice:off' },
+      { text: voiceMode === 'on' ? '● on' : 'on', callback_data: 'qset:voice:on' },
+      { text: voiceMode === 'auto' ? '● auto' : 'auto', callback_data: 'qset:voice:auto' }
+    ],
+    // Thought row
+    [
+      { text: `Thought: ${thoughtIcons[thoughtMode]}`, callback_data: 'noop' },
+      { text: thoughtMode === 'off' ? '● off' : 'off', callback_data: 'qset:thought:off' },
+      { text: thoughtMode === 'on' ? '● on' : 'on', callback_data: 'qset:thought:on' },
+      { text: thoughtMode === 'auto' ? '● auto' : 'auto', callback_data: 'qset:thought:auto' }
+    ],
+    // Session row
+    [
+      { text: `Session: ${sessionIcons[sessionMode]}`, callback_data: 'noop' },
+      { text: sessionMode === 'demand' ? '● demand' : 'demand', callback_data: 'qset:session:demand' },
+      { text: sessionMode === 'session' ? '● session' : 'session', callback_data: 'qset:session:session' }
+    ],
+    // Permission row
+    [
+      { text: `Mode: ${permIcons[permMode]}`, callback_data: 'noop' },
+      { text: permMode === 'default' ? '●' : '🔒', callback_data: 'qset:perm:default' },
+      { text: permMode === 'fast' ? '●' : '⚡', callback_data: 'qset:perm:fast' },
+      { text: permMode === 'plan' ? '●' : '📋', callback_data: 'qset:perm:plan' },
+      { text: permMode === 'yolo' ? '●' : '🔥', callback_data: 'qset:perm:yolo' }
+    ],
+    // Interactive row
+    [
+      { text: `Interactive: ${interactiveIcons[interactive]}`, callback_data: 'noop' },
+      { text: interactive === 'off' ? '● off' : 'off', callback_data: 'qset:interactive:off' },
+      { text: interactive === 'on' ? '● on' : 'on', callback_data: 'qset:interactive:on' }
+    ],
+    // Back button
+    [{ text: '⬅️ Back to Menu', callback_data: 'all:back' }]
+  ];
+
+  const text = `⚙️ *Quick Settings*\n\n📍 ${userState.currentProject}`;
+
+  if (messageId) {
+    return bot.editMessageText(text, {
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: 'Markdown',
+      reply_markup: { inline_keyboard: keyboard }
+    });
+  } else {
+    return bot.sendMessage(chatId, text, {
+      parse_mode: 'Markdown',
+      reply_markup: { inline_keyboard: keyboard }
+    });
+  }
+}
+
 function sendAllMenu(bot, chatId, messageId = null) {
   const userState = getUserState(chatId);
   const modeIcon = userState.sessionMode ? '💬' : '⚡';
@@ -305,6 +407,7 @@ function sendAllMenu(bot, chatId, messageId = null) {
   const interactiveIcon = userState.interactiveMode ? '🔄' : '⚡';
 
   const keyboard = [
+    [{ text: '⚙️ Quick Settings', callback_data: 'all:settings' }],
     [{ text: '🤖 Claude AI', callback_data: 'all:claude' }, { text: '🔄 Interactive', callback_data: 'all:interactive' }],
     [{ text: '📂 Navigation', callback_data: 'all:nav' }, { text: '📋 Quick Commands', callback_data: 'all:files' }],
     [{ text: '🌿 Git', callback_data: 'all:git' }, { text: '🔀 Parallel', callback_data: 'all:parallel' }],
@@ -380,20 +483,211 @@ bot.onText(/\/close/, async (msg) => {
   }, 500);
 });
 
+// ===== Reset command - clear stuck state without restart =====
+bot.onText(/\/reset/, async (msg) => {
+  if (!isAuthorized(msg)) return;
+
+  const chatId = msg.chat.id;
+  const userState = getUserState(chatId);
+
+  // Kill any running Claude process
+  if (userState.interactiveProc) {
+    try { userState.interactiveProc.kill(); } catch (e) {}
+  }
+  if (userState.currentClaudeProc) {
+    try { userState.currentClaudeProc.kill(); } catch (e) {}
+  }
+
+  // Clear all runtime state
+  userState.isProcessing = false;
+  userState.currentClaudeProc = null;
+  userState.interactiveProc = null;
+  userState.pendingMessage = null;
+  userState.interactiveThinkingMsgId = null;
+  userState.interactiveStartTime = null;
+  userState.interactiveToolsUsed = [];
+  userState.interactiveTimerInterval = null;
+  userState.interactiveSessionId = null;
+
+  // Clear session history for this user
+  const { clearSession, clearHistory } = require('./lib/sessions');
+  clearSession(chatId);
+  clearHistory(chatId);
+
+  await bot.sendMessage(chatId, '🔄 State reset! Send a message to start fresh.');
+});
+
 // ===== Restart command =====
 bot.onText(/\/restart/, async (msg) => {
   if (!isAuthorized(msg)) return;
 
   const chatId = msg.chat.id;
-  await bot.sendMessage(chatId, '🔄 Restarting bot (wrapper will restart)...');
+  await bot.sendMessage(chatId, '🔄 Restarting bot...');
+
+  // Clear runtime state for ALL users before restart
+  const allStates = getAllUserStates();
+  for (const [id, userState] of allStates) {
+    // Kill any running processes
+    if (userState.interactiveProc) {
+      try { userState.interactiveProc.kill(); } catch (e) {}
+    }
+    if (userState.currentClaudeProc) {
+      try { userState.currentClaudeProc.kill(); } catch (e) {}
+    }
+    // Clear runtime state
+    userState.isProcessing = false;
+    userState.currentClaudeProc = null;
+    userState.interactiveProc = null;
+    userState.pendingMessage = null;
+    userState.interactiveThinkingMsgId = null;
+    userState.interactiveStartTime = null;
+    userState.interactiveToolsUsed = [];
+    userState.interactiveTimerInterval = null;
+    userState.interactiveSessionId = null;
+  }
+
+  // Clear all session histories
+  fs.writeFileSync(path.join(__dirname, 'data', 'sessions.json'), '{}');
+
+  // Save clean state
+  saveNow();
 
   // Save chat ID for restart notification
   fs.writeFileSync(FILES.restartNotify, chatId.toString());
 
-  // Exit with code 1 - wrapper.js will automatically restart
+  // Spawn new bot process before exiting
+  const { spawn } = require('child_process');
   setTimeout(() => {
-    process.exit(1);
+    spawn('node', ['bot.js'], {
+      cwd: __dirname,
+      detached: true,
+      stdio: 'ignore'
+    }).unref();
+
+    // Exit current process
+    setTimeout(() => process.exit(0), 500);
   }, 500);
+});
+
+// ===== Photo handler - download and send to Claude =====
+bot.on('photo', async (msg) => {
+  if (!isAuthorized(msg)) return;
+
+  const chatId = msg.chat.id;
+  const userState = getUserState(chatId);
+
+  // Send status message immediately
+  let statusMsg;
+  try {
+    statusMsg = await bot.sendMessage(chatId, '📷 Downloading image...', { reply_to_message_id: msg.message_id });
+  } catch (e) {
+    return;
+  }
+
+  try {
+    // Get highest resolution photo
+    const photo = msg.photo[msg.photo.length - 1];
+    const fileId = photo.file_id;
+
+    // Create images directory
+    const imagesDir = path.join(__dirname, 'data', 'images');
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
+    }
+
+    // Use bot's built-in downloadFile method (handles auth automatically)
+    const localPath = path.join(imagesDir, `${Date.now()}_${fileId.substring(0, 20)}.jpg`);
+
+    console.log(`📷 Downloading image to: ${localPath}`);
+    await bot.downloadFile(fileId, imagesDir);
+
+    // Find the downloaded file (bot.downloadFile uses original filename)
+    const file = await bot.getFile(fileId);
+    const downloadedPath = path.join(imagesDir, path.basename(file.file_path));
+
+    // Rename to our path
+    if (fs.existsSync(downloadedPath) && downloadedPath !== localPath) {
+      fs.renameSync(downloadedPath, localPath);
+    }
+
+    // Verify file was downloaded
+    if (!fs.existsSync(localPath)) {
+      await bot.editMessageText('❌ Failed to download image', { chat_id: chatId, message_id: statusMsg.message_id });
+      return;
+    }
+
+    const stats = fs.statSync(localPath);
+    console.log(`📷 Image saved: ${stats.size} bytes`);
+
+    if (stats.size < 1000) {
+      // Too small, probably an error
+      const content = fs.readFileSync(localPath, 'utf-8').substring(0, 200);
+      console.log(`📷 Image content: ${content}`);
+      await bot.editMessageText(`❌ Download failed: ${content.substring(0, 100)}`, { chat_id: chatId, message_id: statusMsg.message_id });
+      return;
+    }
+
+    // Update status
+    await bot.editMessageText('🔄 Analyzing image with Claude...', { chat_id: chatId, message_id: statusMsg.message_id });
+
+    // Build prompt - tell Claude to read and analyze the image file
+    const caption = msg.caption || 'Please analyze this image';
+    const prompt = `${caption}\n\nThe image is at: ${localPath}\nPlease read and analyze it.`;
+
+    // Use Claude in print mode with the prompt
+    const { exec } = require('child_process');
+    const modeFlag = require('./lib/utils').getModeFlag(userState.currentMode);
+    const escapedPrompt = prompt.replace(/'/g, "'\\''");
+
+    const cmd = `claude -p '${escapedPrompt}' ${modeFlag} < /dev/null`;
+    console.log(`📷 Running: ${cmd.substring(0, 100)}...`);
+
+    exec(cmd, {
+      cwd: userState.currentPath,
+      env: { ...process.env, PATH: `/Users/amosdabush/.local/bin:${process.env.PATH}` },
+      maxBuffer: 10 * 1024 * 1024,
+      timeout: 3 * 60 * 1000  // 3 min timeout for image analysis
+    }, async (error, stdout, stderr) => {
+      // Delete status message
+      try { await bot.deleteMessage(chatId, statusMsg.message_id); } catch (e) {}
+
+      if (error) {
+        const errMsg = stderr || error.message || 'Unknown error';
+        bot.sendMessage(chatId, `❌ Error: ${errMsg.substring(0, 500)}`);
+        return;
+      }
+
+      const output = stdout || 'Done (no output)';
+
+      // Send response
+      if (output.length <= 4000) {
+        bot.sendMessage(chatId, output);
+      } else {
+        const { sendLongMessage } = require('./lib/utils');
+        await sendLongMessage(bot, chatId, output);
+      }
+
+      // Clean up old images (keep last 20)
+      try {
+        const files = fs.readdirSync(imagesDir)
+          .map(f => ({ name: f, time: fs.statSync(path.join(imagesDir, f)).mtime.getTime() }))
+          .sort((a, b) => b.time - a.time);
+
+        if (files.length > 20) {
+          for (const f of files.slice(20)) {
+            fs.unlinkSync(path.join(imagesDir, f.name));
+          }
+        }
+      } catch (e) {}
+    });
+  } catch (e) {
+    console.log(`📷 Error: ${e.message}`);
+    try {
+      await bot.editMessageText(`❌ Failed: ${e.message}`, { chat_id: chatId, message_id: statusMsg.message_id });
+    } catch (e2) {
+      bot.sendMessage(chatId, `❌ Failed: ${e.message}`);
+    }
+  }
 });
 
 // ===== Log commands =====
@@ -468,6 +762,45 @@ bot.on('callback_query', async (query) => {
   if (claudeCommands.handleCallback(bot, query, userState)) return;
   if (parallelCommands.handleCallback(bot, query, userState)) return;
 
+  // Handle quick settings callbacks
+  if (data.startsWith('qset:')) {
+    const parts = data.split(':');
+    const setting = parts[1];
+    const value = parts[2];
+    const { scheduleSave } = require('./lib/state');
+
+    if (setting === 'voice') {
+      userState.voiceMode = value;
+      userState.voiceEnabled = value !== 'off';
+      scheduleSave();
+    } else if (setting === 'thought') {
+      userState.thoughtMode = value;
+      scheduleSave();
+    } else if (setting === 'session') {
+      userState.sessionMode = value === 'session';
+      scheduleSave();
+    } else if (setting === 'perm') {
+      userState.currentMode = value;
+      scheduleSave();
+    } else if (setting === 'interactive') {
+      userState.interactiveMode = value === 'on';
+      if (value === 'off' && userState.interactiveProc) {
+        claudeCommands.stopInteractiveSession(userState);
+      }
+      scheduleSave();
+    }
+
+    bot.answerCallbackQuery(query.id, { text: `✅ ${setting}: ${value}` });
+    sendQuickSettings(bot, chatId, query.message.message_id);
+    return;
+  }
+
+  // Handle noop (label buttons)
+  if (data === 'noop') {
+    bot.answerCallbackQuery(query.id);
+    return;
+  }
+
   // Handle /all menu callbacks
   if (data.startsWith('all:')) {
     handleAllMenuCallback(bot, query, userState);
@@ -536,6 +869,13 @@ function handleAllMenuCallback(bot, query, userState) {
   if (section === 'back') {
     bot.answerCallbackQuery(query.id, { text: '⬅️ Back' });
     sendAllMenu(bot, chatId, messageId);
+    return;
+  }
+
+  // Quick Settings section
+  if (section === 'settings') {
+    bot.answerCallbackQuery(query.id, { text: '⚙️ Settings' });
+    sendQuickSettings(bot, chatId, messageId);
     return;
   }
 

@@ -10,8 +10,9 @@ const { BOT_DIR } = require('./config');
 
 /**
  * Send long messages in chunks (Telegram has 4096 char limit)
+ * @param {Object} options - Optional Telegram options (parse_mode, reply_to_message_id, etc.)
  */
-async function sendLongMessage(bot, chatId, text, replyToId = null) {
+async function sendLongMessage(bot, chatId, text, options = {}) {
   const MAX_LENGTH = 4000;
   const chunks = [];
 
@@ -33,7 +34,6 @@ async function sendLongMessage(bot, chatId, text, replyToId = null) {
   }
 
   for (let i = 0; i < chunks.length; i++) {
-    const options = i === 0 && replyToId ? { reply_to_message_id: replyToId } : {};
     await bot.sendMessage(chatId, chunks[i], options);
   }
 }
@@ -82,6 +82,100 @@ function isGitRepo(dirPath) {
  */
 function containsHebrew(text) {
   return /[\u0590-\u05FF]/.test(text);
+}
+
+/**
+ * Format text for Telegram Markdown
+ * Parse code blocks manually and escape inner backticks
+ */
+function formatForTelegram(text) {
+  if (!text) return text;
+
+  // Remove language specifier: ```javascript -> ```
+  let result = text.replace(/```\w+\n/g, '```\n');
+
+  // Manual parsing: find opening ```, then find closing ``` that's at start of line or after newline
+  const parts = [];
+  let i = 0;
+  while (i < result.length) {
+    const openIdx = result.indexOf('```\n', i);
+    if (openIdx === -1) {
+      parts.push(result.slice(i));
+      break;
+    }
+
+    // Add text before code block
+    parts.push(result.slice(i, openIdx));
+
+    // Find the closing ``` - must be preceded by newline or be at very end
+    const codeStart = openIdx + 4; // after ```\n
+    let closeIdx = -1;
+    let searchFrom = codeStart;
+
+    while (searchFrom < result.length) {
+      const nextBackticks = result.indexOf('```', searchFrom);
+      if (nextBackticks === -1) break;
+
+      // Check if this ``` is at start of line (preceded by \n) or is the actual closer
+      if (nextBackticks === codeStart || result[nextBackticks - 1] === '\n') {
+        closeIdx = nextBackticks;
+        break;
+      }
+      searchFrom = nextBackticks + 3;
+    }
+
+    if (closeIdx === -1) {
+      // No proper closing found, treat rest as code
+      const code = result.slice(codeStart).replace(/`/g, "'");
+      parts.push('```\n' + code + '```');
+      break;
+    }
+
+    // Extract code and escape backticks inside
+    const code = result.slice(codeStart, closeIdx).replace(/`/g, "'");
+    parts.push('```\n' + code + '```');
+    i = closeIdx + 3;
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Send message with Markdown, fallback to plain text on error
+ */
+async function sendMessageSafe(bot, chatId, text, options = {}) {
+  const formatted = formatForTelegram(text);
+  try {
+    return await bot.sendMessage(chatId, formatted, { ...options, parse_mode: 'Markdown' });
+  } catch (e) {
+    console.log('Markdown FAILED:', e.message);
+    return await bot.sendMessage(chatId, text, options);
+  }
+}
+
+/**
+ * Edit message with Markdown, fallback to plain text on error
+ */
+async function editMessageSafe(bot, chatId, messageId, text, options = {}) {
+  const formatted = formatForTelegram(text);
+  console.log('=== EDIT ===');
+  console.log('Before:', JSON.stringify(text.substring(0, 200)));
+  console.log('After:', JSON.stringify(formatted.substring(0, 200)));
+  try {
+    return await bot.editMessageText(formatted, {
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: 'Markdown',
+      ...options
+    });
+  } catch (e) {
+    console.log('Markdown edit FAILED:', e.message);
+    return await bot.editMessageText(text, {
+      chat_id: chatId,
+      message_id: messageId,
+      ...options
+    });
+  }
 }
 
 /**
@@ -248,6 +342,9 @@ module.exports = {
   isGitRepo,
   containsHebrew,
   cleanTextForTTS,
+  formatForTelegram,
+  sendMessageSafe,
+  editMessageSafe,
   getBrowseContents,
   cleanupTempFiles,
   cachePath,

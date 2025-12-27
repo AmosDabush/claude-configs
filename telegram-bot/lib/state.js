@@ -45,7 +45,14 @@ function getDefaultUserState() {
     interactiveProc: null,  // Reference to persistent Claude process
     showTerminal: false,    // Show in visible iTerm window
     interactiveLogFile: null,  // Log file path for terminal view
-    thoughtMode: 'off'      // 'off' = disabled, 'on' = show button, 'auto' = auto-show
+    thoughtMode: 'off',     // 'off' = disabled, 'on' = show button, 'auto' = auto-show
+    // Runtime-only fields (never persisted, always reset)
+    pendingMessage: null,
+    interactiveThinkingMsgId: null,
+    interactiveStartTime: null,
+    interactiveToolsUsed: [],
+    interactiveTimerInterval: null,
+    interactiveSessionId: null
   };
 }
 
@@ -94,11 +101,18 @@ function loadUserStates() {
             ...DEFAULT_VOICE_SETTINGS,
             ...(state.voiceSettings || {})
           },
-          // Reset runtime-only state
+          // Reset ALL runtime-only state on load
           isProcessing: false,
           currentClaudeProc: null,
           interactiveProc: null,
-          interactiveLogFile: null
+          interactiveLogFile: null,
+          pendingMessage: null,
+          interactiveThinkingMsgId: null,
+          interactiveStartTime: null,
+          interactiveToolsUsed: [],
+          interactiveTimerInterval: null,
+          interactiveSessionId: null,
+          messageQueue: []
         };
 
         // Migrate old boolean fields to new mode strings
@@ -166,7 +180,20 @@ function saveUserStates() {
 
     for (const [chatId, state] of userStates) {
       // Don't persist runtime-only fields
-      const { isProcessing, currentClaudeProc, interactiveProc, interactiveLogFile, ...persistableState } = state;
+      const {
+        isProcessing,
+        currentClaudeProc,
+        interactiveProc,
+        interactiveLogFile,
+        pendingMessage,
+        interactiveThinkingMsgId,
+        interactiveStartTime,
+        interactiveToolsUsed,
+        interactiveTimerInterval,
+        interactiveSessionId,
+        messageQueue,
+        ...persistableState
+      } = state;
 
       // If persistSession is enabled, save the active session too
       if (state.persistSession && sessionsModule) {

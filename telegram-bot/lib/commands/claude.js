@@ -12,7 +12,7 @@ const {
   getSessionHistory, getSessionByShortId, resumeSession, clearHistory,
   getCliSessions, getCliProjects
 } = require('../sessions');
-const { sendLongMessage, getModeFlag } = require('../utils');
+const { sendLongMessage, getModeFlag, formatForTelegram, sendMessageSafe, editMessageSafe } = require('../utils');
 const { generateVoice, generateVoiceChunked } = require('../tts');
 const { MODE_DESCRIPTIONS, RESPONSE_STYLE_OPTIONS, TTS_ENGINES } = require('../config');
 
@@ -803,10 +803,7 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
                   currentMessageId = userState.interactiveThinkingMsgId;
                   userState.interactiveThinkingMsgId = null;
                   try {
-                    await bot.editMessageText(text.substring(0, 4000) + ' ▌', {
-                      chat_id: chatId,
-                      message_id: currentMessageId
-                    });
+                    await editMessageSafe(bot, chatId, currentMessageId, text.substring(0, 4000) + ' ▌');
                     lastText = text;
                     lastUpdate = Date.now();
                   } catch (e) { console.log('Edit thinking error:', e.message); }
@@ -814,7 +811,7 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
                   // Double-check still null (another event might have set it)
                   // No thinking message - send new
                   try {
-                    const sent = await bot.sendMessage(chatId, text.substring(0, 4000) + ' ▌');
+                    const sent = await sendMessageSafe(bot, chatId, text.substring(0, 4000) + ' ▌');
                     currentMessageId = sent.message_id;
                     lastText = text;
                     lastUpdate = Date.now();
@@ -827,10 +824,7 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
                   lastUpdate = now;
                   lastText = text;
                   try {
-                    await bot.editMessageText(text.substring(0, 4000) + ' ▌', {
-                      chat_id: chatId,
-                      message_id: currentMessageId
-                    });
+                    await editMessageSafe(bot, chatId, currentMessageId, text.substring(0, 4000) + ' ▌');
                   } catch (e) {}
                 }
               }
@@ -939,22 +933,21 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
               if (currentMessageId) {
                 // Edit existing streaming message
                 try {
-                  await bot.editMessageText(finalText, {
-                    chat_id: chatId,
-                    message_id: currentMessageId
-                  });
+                  await editMessageSafe(bot, chatId, currentMessageId, finalText);
                 } catch (e) {}
               } else if (!userState.interactiveThinkingMsgId || userState.interactiveThinkingMsgId === null) {
                 // No streaming happened AND no thinking message being processed - send new message
                 // This guards against race conditions
-                await bot.sendMessage(chatId, finalText);
+                await sendMessageSafe(bot, chatId, finalText);
               }
             } else {
               // Long message - delete partial and send chunks
               if (currentMessageId) {
                 try { await bot.deleteMessage(chatId, currentMessageId); } catch (e) {}
               }
-              await sendLongMessage(bot, chatId, finalText);
+              // Send long message with markdown formatting
+              const formatted = formatForTelegram(finalText);
+              await sendLongMessage(bot, chatId, formatted, { parse_mode: 'Markdown' });
             }
 
             // Send voice if voiceMode is 'auto'
@@ -964,46 +957,44 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
             }
           }
 
-          // Send summary only if we had a request in progress
+          // Send compact summary only if we had a request in progress
           if (userState.interactiveStartTime) {
-            const summaryParts = [`✅ Done (${elapsed}`];
-            if (toolCount > 0) summaryParts.push(`*${toolCount} tools*`);
-            summaryParts[summaryParts.length - 1] += ')';
-            const summaryText = summaryParts.join(', ');
-
-            // Build keyboard buttons based on modes
-            const keyboardRow = [];
             const timestamp = Date.now();
             const voiceMode = userState.voiceMode || 'off';
             const thoughtMode = userState.thoughtMode || 'off';
 
             console.log(`[thought btn] mode=${thoughtMode}, toolCount=${toolCount}, processLog.length=${processLog.length}`);
 
+            // Build inline buttons for same-line display
+            const inlineButtons = [];
+
             // Thought log button: show if mode is 'on' and there's something to show
             if (thoughtMode === 'on' && (toolCount > 0 || processLog.length > 0)) {
               const logId = `log_${timestamp}`;
               pendingLogs.set(logId, processLog.slice());
-              const btnText = toolCount > 0 ? `🧠 ${toolCount} tools` : `🧠 ${processLog.length} steps`;
-              keyboardRow.push({ text: btnText, callback_data: `showlog:${logId}` });
+              const count = toolCount > 0 ? toolCount : processLog.length;
+              inlineButtons.push({ text: `${count} tools`, callback_data: `showlog:${logId}` });
             }
 
             // Voice button: show if mode is 'on' (not auto, not off)
             if (voiceMode === 'on' && finalText && finalText.length > 10) {
               const voiceId = `voice_${timestamp}`;
               pendingLogs.set(voiceId, finalText);
-              keyboardRow.push({ text: '🔊 Voice', callback_data: `getvoice:${voiceId}` });
+              inlineButtons.push({ text: 'voice', callback_data: `getvoice:${voiceId}` });
             }
 
             // If thought mode is 'auto', show thought log automatically
             if (thoughtMode === 'auto' && processLog.length > 0) {
               const logLines = processLog.map((step, i) => `${i + 1}. ${step}`).join('\n');
+              const summaryText = `✅ Done (${elapsed})`;
               const logText = `${summaryText}\n\n🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
               if (logText.length <= 4000) {
                 // Add voice button if voiceMode is 'on'
-                if (keyboardRow.length > 0) {
+                const voiceButtons = inlineButtons.filter(b => b.callback_data.startsWith('getvoice:'));
+                if (voiceButtons.length > 0) {
                   await bot.sendMessage(chatId, logText, {
                     parse_mode: 'Markdown',
-                    reply_markup: { inline_keyboard: [keyboardRow.filter(b => b.callback_data.startsWith('getvoice:'))] }
+                    reply_markup: { inline_keyboard: [voiceButtons] }
                   });
                 } else {
                   await bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
@@ -1014,14 +1005,15 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
                 const buffer = Buffer.from(logLines, 'utf-8');
                 await bot.sendDocument(chatId, buffer, { caption: '🧠 Thought Process Log' }, { filename: 'thought-process.txt', contentType: 'text/plain' });
               }
-            } else if (keyboardRow.length > 0) {
-              // Show buttons (tools and/or voice)
-              await bot.sendMessage(chatId, summaryText, {
+            } else if (inlineButtons.length > 0) {
+              // Compact: Done with buttons on same line - ✅ Done (5s) [3 tools] [voice]
+              await bot.sendMessage(chatId, `✅ Done (${elapsed})`, {
                 parse_mode: 'Markdown',
-                reply_markup: { inline_keyboard: [keyboardRow] }
+                reply_markup: { inline_keyboard: [inlineButtons] }
               });
             } else {
-              await bot.sendMessage(chatId, summaryText, { parse_mode: 'Markdown' });
+              // No buttons needed - just show done
+              await bot.sendMessage(chatId, `✅ Done (${elapsed})`, { parse_mode: 'Markdown' });
             }
           }
 
@@ -1205,7 +1197,7 @@ async function handleMessage(bot, msg, isAuthorized) {
     }
 
     // Start new PTY session with this message
-    // ALWAYS try to resume existing session for this project (unless /new was used)
+    // Only resume if there's an ACTIVE session (not from history - that can cause stuck states)
     let existingSession = getSession(chatId);
 
     // Check if session matches current project
@@ -1215,21 +1207,12 @@ async function handleMessage(bot, msg, isAuthorized) {
       existingSession = null;
     }
 
-    // If no active session, check history for the most recent one in this project
-    if (!existingSession) {
-      const history = getSessionHistory(chatId);
-      const recentSession = history.find(s => s.projectPath === userState.currentPath);
-      if (recentSession) {
-        existingSession = recentSession;
-        // Restore it as active session
-        resumeSession(chatId, recentSession);
-        console.log(`[Interactive] Restored session from history: ${recentSession.sessionId.substring(0, 8)}...`);
-      }
-    }
+    // DON'T auto-restore from history - it causes stuck states with corrupted sessions
+    // User can manually resume with /sessions command if needed
 
     const resumeSessionId = existingSession?.sessionId || null;
 
-    const sessionIndicator = resumeSessionId ? '💬 Resuming session...' : '🆕 Starting session...';
+    const sessionIndicator = resumeSessionId ? '💬 Resuming session...' : '🆕 Starting new session...';
     const thinkingMsg = await bot.sendMessage(chatId, `🔄 ${sessionIndicator}`, { reply_to_message_id: msg.message_id });
     userState.interactiveThinkingMsgId = thinkingMsg.message_id;
 
@@ -1587,13 +1570,23 @@ async function handleCallback(bot, query, userState) {
       const logLines = log.map((step, i) => `${i + 1}. ${step}`).join('\n');
       const logText = `🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
       bot.answerCallbackQuery(query.id, { text: '🧠 Showing log' });
+
+      // Check if voice button exists (same timestamp)
+      const timestamp = logId.substring(4); // Remove 'log_' prefix
+      const voiceId = `voice_${timestamp}`;
+      const voiceText = pendingLogs.get(voiceId);
+
+      // Build keyboard - keep voice button if available
+      const keyboard = voiceText ? [[{ text: 'voice', callback_data: `getvoice:${voiceId}` }]] : [];
+
       // Edit the message to include the log
       try {
         const currentText = query.message.text;
-        bot.editMessageText(`${currentText}\n\n${logText}`, {
+        await bot.editMessageText(`${currentText}\n\n${logText}`, {
           chat_id: chatId,
           message_id: query.message.message_id,
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          reply_markup: keyboard.length > 0 ? { inline_keyboard: keyboard } : undefined
         });
       } catch (e) {
         // If edit fails, send as new message
