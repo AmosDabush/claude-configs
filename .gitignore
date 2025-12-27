@@ -1,7 +1,7 @@
 # Sensitive files - DO NOT COMMIT
 db-credentials.env
 *.env
-db-config.md
+# Note: db-config.md is safe (no actual credentials)
 
 # Node modules
 node_modules/
@@ -17,7 +17,6 @@ shell-snapshots/
 todos/
 downloads/
 statsig/
-ide/
 settings.local.json
 
 # Temp files
