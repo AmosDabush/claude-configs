@@ -16,6 +16,12 @@ if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
     echo "✓ CLAUDE.md"
 fi
 
+# Sync db-config.md (safe - no actual credentials)
+if [ -f "$CLAUDE_DIR/db-config.md" ]; then
+    cp "$CLAUDE_DIR/db-config.md" "$REPO_DIR/"
+    echo "✓ db-config.md"
+fi
+
 # Sync commands/
 if [ -d "$CLAUDE_DIR/commands" ]; then
     mkdir -p "$REPO_DIR/commands"
