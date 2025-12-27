@@ -14,7 +14,7 @@ const {
 } = require('../sessions');
 const { sendLongMessage, getModeFlag, formatForTelegram, sendMessageSafe, editMessageSafe } = require('../utils');
 const { generateVoice, generateVoiceChunked } = require('../tts');
-const { MODE_DESCRIPTIONS, RESPONSE_STYLE_OPTIONS, TTS_ENGINES } = require('../config');
+const { MODE_DESCRIPTIONS, TEXT_STYLE_OPTIONS, VOICE_STYLE_OPTIONS, TTS_ENGINES } = require('../config');
 
 // Store pending process logs for clickable display
 const pendingLogs = new Map();
@@ -40,6 +40,106 @@ function register(bot, isAuthorized) {
     if (!isAuthorized(msg)) return;
     clearSession(msg.chat.id);
     bot.sendMessage(msg.chat.id, '🆕 Started fresh session. Claude won\'t remember previous messages.');
+  });
+
+  // Handle /start t and /start v (deep links) - call handlers directly
+  bot.onText(/\/start (t|v)$/, async (msg, match) => {
+    console.log(`[/start] Received: ${msg.text}`);
+    if (!isAuthorized(msg)) return;
+    const chatId = msg.chat.id;
+    const cmd = match[1];
+    console.log(`[/start] Command: ${cmd}, chat: ${chatId}`);
+
+    if (cmd === 't') {
+      // Show thought log
+      const log = pendingLogs.get(`log_${chatId}`);
+      if (!log || log.length === 0) {
+        bot.sendMessage(chatId, '❌ No thought log available');
+        return;
+      }
+      const logLines = log.map((step, i) => `${i + 1}. ${step}`).join('\n');
+      const logText = `🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
+      if (logText.length <= 4000) {
+        bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
+      } else {
+        const buffer = Buffer.from(logLines, 'utf-8');
+        bot.sendDocument(chatId, buffer, { caption: '🧠 Thought Process' }, { filename: 'thought.txt', contentType: 'text/plain' });
+      }
+    } else if (cmd === 'v') {
+      // Generate voice
+      const text = pendingLogs.get(`voice_${chatId}`);
+      if (!text) {
+        bot.sendMessage(chatId, '❌ No text available for voice');
+        return;
+      }
+      await generateVoiceResponseWithChunking(bot, chatId, text);
+    }
+  });
+
+  // Helper function for voice generation - uses sendVoiceResponse for chunking support
+  async function generateVoiceResponseWithChunking(bot, chatId, text) {
+    console.log(`[Voice] Starting for chat ${chatId}, text length: ${text?.length}`);
+    const userState = getUserState(chatId);
+
+    // Clean text for TTS
+    const cleanText = text
+      .replace(/```[\s\S]*?```/g, '')           // Remove code blocks
+      .replace(/`[^`]+`/g, '')                   // Remove inline code
+      .replace(/\*\*([^*]+)\*\*/g, '$1')         // Bold to plain
+      .replace(/\*([^*]+)\*/g, '$1')             // Italic to plain
+      .replace(/#+\s*/g, '')                      // Remove headers
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // Links to text
+      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{231A}-\u{231B}]|[\u{23E9}-\u{23F3}]|[\u{23F8}-\u{23FA}]|[\u{25AA}-\u{25AB}]|[\u{25B6}]|[\u{25C0}]|[\u{25FB}-\u{25FE}]|[\u{2614}-\u{2615}]|[\u{2648}-\u{2653}]|[\u{267F}]|[\u{2693}]|[\u{26A1}]|[\u{26AA}-\u{26AB}]|[\u{26BD}-\u{26BE}]|[\u{26C4}-\u{26C5}]|[\u{26CE}]|[\u{26D4}]|[\u{26EA}]|[\u{26F2}-\u{26F3}]|[\u{26F5}]|[\u{26FA}]|[\u{26FD}]|[\u{2702}]|[\u{2705}]|[\u{2708}-\u{270D}]|[\u{270F}]|[\u{2712}]|[\u{2714}]|[\u{2716}]|[\u{271D}]|[\u{2721}]|[\u{2728}]|[\u{2733}-\u{2734}]|[\u{2744}]|[\u{2747}]|[\u{274C}]|[\u{274E}]|[\u{2753}-\u{2755}]|[\u{2757}]|[\u{2763}-\u{2764}]|[\u{2795}-\u{2797}]|[\u{27A1}]|[\u{27B0}]|[\u{27BF}]|[\u{2934}-\u{2935}]|[\u{2B05}-\u{2B07}]|[\u{2B1B}-\u{2B1C}]|[\u{2B50}]|[\u{2B55}]|[\u{3030}]|[\u{303D}]|[\u{3297}]|[\u{3299}]/gu, '')  // Remove emojis
+      .replace(/\s+/g, ' ')                       // Normalize whitespace
+      .trim();
+
+    console.log(`[Voice] Clean text length: ${cleanText.length}`);
+
+    if (cleanText.length < 5) {
+      bot.sendMessage(chatId, '❌ Text too short for voice');
+      return;
+    }
+
+    // Use sendVoiceResponse which supports chunking
+    await sendVoiceResponse(bot, chatId, cleanText, userState);
+  }
+
+  // /t or /get_thought - show last thought process log
+  bot.onText(/\/(t|get_thought)$/, async (msg) => {
+    if (!isAuthorized(msg)) return;
+    const chatId = msg.chat.id;
+    const log = pendingLogs.get(`log_${chatId}`);
+
+    if (!log || log.length === 0) {
+      bot.sendMessage(chatId, '❌ No thought log available');
+      return;
+    }
+
+    const logLines = log.map((step, i) => `${i + 1}. ${step}`).join('\n');
+    const logText = `🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
+
+    if (logText.length <= 4000) {
+      bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
+    } else {
+      const buffer = Buffer.from(logLines, 'utf-8');
+      bot.sendDocument(chatId, buffer, { caption: '🧠 Thought Process' }, { filename: 'thought.txt', contentType: 'text/plain' });
+    }
+  });
+
+  // /v or /get_voice - generate voice from last response
+  bot.onText(/\/(v|get_voice)$/, async (msg) => {
+    console.log(`[/v] Received: ${msg.text}`);
+    if (!isAuthorized(msg)) return;
+    const chatId = msg.chat.id;
+    const text = pendingLogs.get(`voice_${chatId}`);
+    console.log(`[/v] Text from pendingLogs: ${text ? text.substring(0, 50) + '...' : 'NULL'}`);
+
+    if (!text) {
+      bot.sendMessage(chatId, '❌ No text available for voice');
+      return;
+    }
+
+    await generateVoiceResponse(bot, chatId, text);
   });
 
   // /session - toggle session mode
@@ -965,55 +1065,48 @@ function startInteractiveSession(userState, chatId, bot, resumeId = null, initia
 
             console.log(`[thought btn] mode=${thoughtMode}, toolCount=${toolCount}, processLog.length=${processLog.length}`);
 
-            // Build inline buttons for same-line display
-            const inlineButtons = [];
+            // Build single-line summary with CLICKABLE EMOJI LINKS
+            // Format: ✅ Done (5s) [🧠3, 🔊]
+            const count = toolCount > 0 ? toolCount : processLog.length;
+            const botUsername = (await bot.getMe()).username;
 
-            // Thought log button: show if mode is 'on' and there's something to show
-            if (thoughtMode === 'on' && (toolCount > 0 || processLog.length > 0)) {
-              const logId = `log_${timestamp}`;
-              pendingLogs.set(logId, processLog.slice());
-              const count = toolCount > 0 ? toolCount : processLog.length;
-              inlineButtons.push({ text: `${count} tools`, callback_data: `showlog:${logId}` });
+            let commands = [];
+
+            // Save log for /t command - clickable 🧠
+            if (count > 0) {
+              pendingLogs.set(`log_${chatId}`, processLog.slice());
+              if (thoughtMode === 'on') {
+                commands.push(`[(${count})🧠](https://t.me/${botUsername}?start=t)`);
+              }
             }
 
-            // Voice button: show if mode is 'on' (not auto, not off)
+            // Save text for /v command - clickable 🔊
             if (voiceMode === 'on' && finalText && finalText.length > 10) {
-              const voiceId = `voice_${timestamp}`;
-              pendingLogs.set(voiceId, finalText);
-              inlineButtons.push({ text: 'voice', callback_data: `getvoice:${voiceId}` });
+              pendingLogs.set(`voice_${chatId}`, finalText);
+              commands.push(`[🔊](https://t.me/${botUsername}?start=v)`);
             }
 
-            // If thought mode is 'auto', show thought log automatically
+            // Build summary text
+            let summaryText = `✅ Done (${elapsed})`;
+            if (commands.length > 0) {
+              summaryText += ` [${commands.join(', ')}]`;
+            } else if (count > 0 && thoughtMode !== 'auto') {
+              summaryText += ` [(${count})🧠]`;
+            }
+
+            // Auto thought mode - show log automatically
             if (thoughtMode === 'auto' && processLog.length > 0) {
               const logLines = processLog.map((step, i) => `${i + 1}. ${step}`).join('\n');
-              const summaryText = `✅ Done (${elapsed})`;
-              const logText = `${summaryText}\n\n🧠 *Thought Process:*\n\`\`\`\n${logLines}\n\`\`\``;
+              const logText = `${summaryText}\n\n🧠 *Process:*\n\`\`\`\n${logLines}\n\`\`\``;
               if (logText.length <= 4000) {
-                // Add voice button if voiceMode is 'on'
-                const voiceButtons = inlineButtons.filter(b => b.callback_data.startsWith('getvoice:'));
-                if (voiceButtons.length > 0) {
-                  await bot.sendMessage(chatId, logText, {
-                    parse_mode: 'Markdown',
-                    reply_markup: { inline_keyboard: [voiceButtons] }
-                  });
-                } else {
-                  await bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
-                }
+                await bot.sendMessage(chatId, logText, { parse_mode: 'Markdown' });
               } else {
-                // Send as file if too long
-                await bot.sendMessage(chatId, summaryText, { parse_mode: 'Markdown' });
+                await bot.sendMessage(chatId, summaryText);
                 const buffer = Buffer.from(logLines, 'utf-8');
-                await bot.sendDocument(chatId, buffer, { caption: '🧠 Thought Process Log' }, { filename: 'thought-process.txt', contentType: 'text/plain' });
+                await bot.sendDocument(chatId, buffer, { caption: '🧠 Process' }, { filename: 'process.txt', contentType: 'text/plain' });
               }
-            } else if (inlineButtons.length > 0) {
-              // Compact: Done with buttons on same line - ✅ Done (5s) [3 tools] [voice]
-              await bot.sendMessage(chatId, `✅ Done (${elapsed})`, {
-                parse_mode: 'Markdown',
-                reply_markup: { inline_keyboard: [inlineButtons] }
-              });
             } else {
-              // No buttons needed - just show done
-              await bot.sendMessage(chatId, `✅ Done (${elapsed})`, { parse_mode: 'Markdown' });
+              await bot.sendMessage(chatId, summaryText, { parse_mode: 'Markdown' });
             }
           }
 
@@ -1192,32 +1285,68 @@ async function handleMessage(bot, msg, isAuthorized) {
       // Reset tracking for new request
       userState.interactiveStartTime = Date.now();
       userState.interactiveToolsUsed = [];
-      sendToInteractive(userState, msg.text, bot, chatId);
+
+      // Apply style prompt based on voice mode
+      let messageToSend = msg.text;
+      const voiceMode = userState.voiceMode || 'off';
+      if (voiceMode === 'auto') {
+        // Voice auto mode - use voice style
+        const stylePrompt = VOICE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.prompt;
+        if (stylePrompt) messageToSend = `[${stylePrompt}]\n\n${msg.text}`;
+      } else {
+        // Text mode (off/on) - use text style
+        const textStyle = userState.voiceSettings.textStyle || 'off';
+        const stylePrompt = TEXT_STYLE_OPTIONS.find(t => t.id === textStyle)?.prompt;
+        if (stylePrompt) messageToSend = `[${stylePrompt}]\n\n${msg.text}`;
+      }
+
+      sendToInteractive(userState, messageToSend, bot, chatId);
       return;
     }
 
     // Start new PTY session with this message
-    // Only resume if there's an ACTIVE session (not from history - that can cause stuck states)
-    let existingSession = getSession(chatId);
+    // Check for saved session ID (from restart) or active session
+    let resumeSessionId = null;
 
-    // Check if session matches current project
-    if (existingSession && existingSession.projectPath !== userState.currentPath) {
-      console.log(`[Interactive] Session project mismatch, clearing`);
-      clearSession(chatId);
-      existingSession = null;
+    // Priority 1: Active session in memory
+    let existingSession = getSession(chatId);
+    if (existingSession) {
+      // Check if session matches current project
+      if (existingSession.projectPath !== userState.currentPath) {
+        console.log(`[Interactive] Session project mismatch, clearing`);
+        clearSession(chatId);
+        existingSession = null;
+      } else {
+        resumeSessionId = existingSession.sessionId;
+      }
     }
 
-    // DON'T auto-restore from history - it causes stuck states with corrupted sessions
-    // User can manually resume with /sessions command if needed
-
-    const resumeSessionId = existingSession?.sessionId || null;
+    // Priority 2: Saved session ID from restart (if no active session)
+    if (!resumeSessionId && userState.interactiveSessionId) {
+      console.log(`[Interactive] Found saved session ID from restart: ${userState.interactiveSessionId.substring(0, 8)}...`);
+      resumeSessionId = userState.interactiveSessionId;
+    }
 
     const sessionIndicator = resumeSessionId ? '💬 Resuming session...' : '🆕 Starting new session...';
     const thinkingMsg = await bot.sendMessage(chatId, `🔄 ${sessionIndicator}`, { reply_to_message_id: msg.message_id });
     userState.interactiveThinkingMsgId = thinkingMsg.message_id;
 
+    // Apply style prompt based on voice mode
+    let initialMessage = msg.text;
+    const voiceModeInit = userState.voiceMode || 'off';
+    if (voiceModeInit === 'auto') {
+      // Voice auto mode - use voice style
+      const stylePrompt = VOICE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.prompt;
+      if (stylePrompt) initialMessage = `[${stylePrompt}]\n\n${msg.text}`;
+    } else {
+      // Text mode (off/on) - use text style
+      const textStyle = userState.voiceSettings.textStyle || 'off';
+      const stylePrompt = TEXT_STYLE_OPTIONS.find(t => t.id === textStyle)?.prompt;
+      if (stylePrompt) initialMessage = `[${stylePrompt}]\n\n${msg.text}`;
+    }
+
     console.log(`[Interactive] Starting session for chat ${chatId}, resume: ${resumeSessionId || 'new'}`);
-    startInteractiveSession(userState, chatId, bot, resumeSessionId, msg.text);
+    startInteractiveSession(userState, chatId, bot, resumeSessionId, initialMessage);
     return;
   }
 
@@ -1273,13 +1402,18 @@ async function handleMessage(bot, msg, isAuthorized) {
   let lastUpdate = Date.now();
   let lastText = '';
 
-  // Prepend voice response style prompt when voice is enabled
+  // Apply style prompt based on voice mode
   let finalPrompt = prompt;
-  if (userState.voiceEnabled && userState.voiceSettings.responseLevel !== 'off') {
-    const stylePrompt = RESPONSE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.prompt;
-    if (stylePrompt) {
-      finalPrompt = `[${stylePrompt}]\n\n${prompt}`;
-    }
+  const voiceModeNonInt = userState.voiceMode || 'off';
+  if (voiceModeNonInt === 'auto') {
+    // Voice auto mode - use voice style
+    const stylePrompt = VOICE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.prompt;
+    if (stylePrompt) finalPrompt = `[${stylePrompt}]\n\n${prompt}`;
+  } else {
+    // Text mode (off/on) - use text style
+    const textStyle = userState.voiceSettings.textStyle || 'off';
+    const stylePrompt = TEXT_STYLE_OPTIONS.find(t => t.id === textStyle)?.prompt;
+    if (stylePrompt) finalPrompt = `[${stylePrompt}]\n\n${prompt}`;
   }
 
   try {

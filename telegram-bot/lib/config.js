@@ -173,14 +173,26 @@ const GOOGLE_SPEED_OPTIONS = [
   { id: 'slow', name: '🐢 Slow' }
 ];
 
-// Response style options for voice
-const RESPONSE_STYLE_OPTIONS = [
+// Text response style options (for regular text responses)
+const TEXT_STYLE_OPTIONS = [
+  { id: 'off', name: '📝 Default - Normal Claude', prompt: '' },
+  { id: 'concise', name: '⚡ Concise - Short answers', prompt: 'Be concise. Give short, direct answers. Skip unnecessary explanations.' },
+  { id: 'detailed', name: '📚 Detailed - Full explanations', prompt: 'Provide detailed explanations with examples. Be thorough.' },
+  { id: 'code_only', name: '💻 Code Focus - Minimal text', prompt: 'Focus on code. Minimal explanations. Show working code first, explain only if needed.' },
+  { id: 'no_emoji', name: '🚫 No Emoji - Plain text', prompt: 'Do not use any emojis in your response. Plain text only.' }
+];
+
+// Voice response style options (for voice/TTS output)
+const VOICE_STYLE_OPTIONS = [
   { id: 'off', name: '📝 Off - Normal text', prompt: '' },
   { id: 'normal', name: '🗣 Normal - Light formatting', prompt: 'Respond clearly. Minimize markdown, avoid complex formatting.' },
   { id: 'casual', name: '💬 Casual - Conversational', prompt: 'Respond in natural conversational speech. No markdown, no bullet points. Short sentences.' },
   { id: 'very_casual', name: '🎙 Very Casual - Natural speech', prompt: `OUTPUT_STYLE = "spoken explanation". Speak as if explaining things out loud in a relaxed conversation. Do NOT paste code blocks unless explicitly asked. Never read code, scripts, URLs, or endpoints verbatim. Describe what code does in plain language. Explain the idea, purpose, and flow, not the syntax. If there is an endpoint or URL, explain what it represents without saying the actual path. If there is a script, explain what it achieves step by step without quoting lines. If there is configuration, explain the intent, not keys and values. Use short sentences. Use everyday language. It should sound like spoken explanation, not documentation. Prefer "basically", "the idea here is", "what's happening is", "in practice". Assume the listener is technical but does not want to see raw code. Focus on understanding, not implementation details. Hard rule: If you are about to show code, stop and explain it instead. Only show code if explicitly asked. NEVER use emojis.` },
   { id: 'bro', name: '🤙 Bro - Friend chat', prompt: `STYLE_MODE = "bro". You are talking to a friend. Both of you are technical. No teaching, no documentation, no formality. Just vibes. Tone: Very casual, friendly, slight humor encouraged, sound like spoken language not written text. Language rules: Short sentences. Break thoughts. Feel like WhatsApp or Discord voice chat. It's OK to be a bit messy. Hard rules: NEVER paste code. NEVER read code, endpoints, URLs, function names, or config keys. NEVER sound like a tutorial. NEVER use emojis. Instead: Talk about what's going on. Explain the idea. Explain the intention. Explain the vibe of the solution. Assumptions: The other person is smart. No need to prove anything. No need to be precise unless it matters. If details are not critical, skip them, hand-wave them. Allowed: Light jokes, casual exaggeration, friendly sarcasm. Not allowed: Overdoing jokes, being cringe, emojis. Do NOT explain like a teacher. Talk like a friend.` }
 ];
+
+// Keep for backwards compatibility
+const RESPONSE_STYLE_OPTIONS = VOICE_STYLE_OPTIONS;
 
 // Mode descriptions
 const MODE_DESCRIPTIONS = {
@@ -201,8 +213,9 @@ const DEFAULT_VOICE_SETTINGS = {
   googleTld: 'com',
   googleHebrewTld: 'co.il',
   googleSlow: false,
-  responseLevel: 'very_casual',
-  chunkPreset: 'medium'  // NEW: voice chunk preset
+  responseLevel: 'very_casual',  // Voice style (when voiceMode is 'auto')
+  textStyle: 'off',              // Text style (when voiceMode is 'off' or 'on')
+  chunkPreset: 'medium'
 };
 
 // Session settings
@@ -227,7 +240,9 @@ module.exports = {
   GOOGLE_VOICE_OPTIONS,
   SPEED_OPTIONS,
   GOOGLE_SPEED_OPTIONS,
-  RESPONSE_STYLE_OPTIONS,
+  TEXT_STYLE_OPTIONS,
+  VOICE_STYLE_OPTIONS,
+  RESPONSE_STYLE_OPTIONS,  // backwards compatibility
   DEFAULT_VOICE_SETTINGS,
 
   // Modes

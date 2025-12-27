@@ -10,7 +10,7 @@ const path = require('path');
 
 // Load modules
 const { FILES, TTS_ENGINES, VOICE_CHUNK_PRESETS } = require('./lib/config');
-const { getUserState, getAllUserStates, saveNow, getProjects, setSessionsModule, restoreActiveSessions } = require('./lib/state');
+const { getUserState, getAllUserStates, saveNow, getProjects, setSessionsModule, restoreActiveSessions, resetUserRuntime, resetAllUsersRuntime } = require('./lib/state');
 const { cleanupTempFiles, runQuickCommand, isGitRepo } = require('./lib/utils');
 const sessions = require('./lib/sessions');
 
@@ -155,7 +155,7 @@ claudeCommands.register(bot, isAuthorized);
 parallelCommands.register(bot, isAuthorized);
 
 // ===== Help commands =====
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/start$/, (msg) => {  // Only match /start without parameters
   if (!isAuthorized(msg)) return;
 
   const userState = getUserState(msg.chat.id);
@@ -336,6 +336,8 @@ function sendQuickSettings(bot, chatId, messageId = null) {
   const sessionMode = userState.sessionMode ? 'session' : 'demand';
   const permMode = userState.currentMode || 'default';
   const interactive = userState.interactiveMode ? 'on' : 'off';
+  const textStyle = userState.voiceSettings?.textStyle || 'off';
+  const voiceStyle = userState.voiceSettings?.responseLevel || 'off';
 
   // Icons for current state
   const voiceIcons = { off: '🔇', on: '🔊', auto: '🔊' };
@@ -343,31 +345,49 @@ function sendQuickSettings(bot, chatId, messageId = null) {
   const sessionIcons = { demand: '⚡', session: '💬' };
   const permIcons = { default: '🔒', fast: '⚡', plan: '📋', yolo: '🔥' };
   const interactiveIcons = { off: '⚡', on: '🔄' };
+  const textStyleIcons = { off: '📝', concise: '⚡', detailed: '📚', code_only: '💻', no_emoji: '🚫' };
+  const voiceStyleIcons = { off: '📝', normal: '🗣', casual: '💬', very_casual: '🎙', bro: '🤙' };
 
   const keyboard = [
     // Voice row
     [
-      { text: `Voice: ${voiceIcons[voiceMode]}`, callback_data: 'noop' },
+      { text: `Voice: ${voiceIcons[voiceMode]}`, callback_data: 'cmd:voice' },
       { text: voiceMode === 'off' ? '● off' : 'off', callback_data: 'qset:voice:off' },
       { text: voiceMode === 'on' ? '● on' : 'on', callback_data: 'qset:voice:on' },
       { text: voiceMode === 'auto' ? '● auto' : 'auto', callback_data: 'qset:voice:auto' }
     ],
+    // Text Style row (shown when voice is off/on)
+    [
+      { text: `TxtStyle: ${textStyleIcons[textStyle] || '📝'}`, callback_data: 'cmd:textstyle' },
+      { text: textStyle === 'off' ? '●' : '📝', callback_data: 'qset:txtstyle:off' },
+      { text: textStyle === 'concise' ? '●' : '⚡', callback_data: 'qset:txtstyle:concise' },
+      { text: textStyle === 'code_only' ? '●' : '💻', callback_data: 'qset:txtstyle:code_only' },
+      { text: textStyle === 'no_emoji' ? '●' : '🚫', callback_data: 'qset:txtstyle:no_emoji' }
+    ],
+    // Voice Style row (shown when voice is auto)
+    [
+      { text: `VoiceStyle: ${voiceStyleIcons[voiceStyle] || '📝'}`, callback_data: 'cmd:voicestyle' },
+      { text: voiceStyle === 'off' ? '●' : '📝', callback_data: 'qset:vocstyle:off' },
+      { text: voiceStyle === 'casual' ? '●' : '💬', callback_data: 'qset:vocstyle:casual' },
+      { text: voiceStyle === 'very_casual' ? '●' : '🎙', callback_data: 'qset:vocstyle:very_casual' },
+      { text: voiceStyle === 'bro' ? '●' : '🤙', callback_data: 'qset:vocstyle:bro' }
+    ],
     // Thought row
     [
-      { text: `Thought: ${thoughtIcons[thoughtMode]}`, callback_data: 'noop' },
+      { text: `Thought: ${thoughtIcons[thoughtMode]}`, callback_data: 'cmd:thought' },
       { text: thoughtMode === 'off' ? '● off' : 'off', callback_data: 'qset:thought:off' },
       { text: thoughtMode === 'on' ? '● on' : 'on', callback_data: 'qset:thought:on' },
       { text: thoughtMode === 'auto' ? '● auto' : 'auto', callback_data: 'qset:thought:auto' }
     ],
     // Session row
     [
-      { text: `Session: ${sessionIcons[sessionMode]}`, callback_data: 'noop' },
+      { text: `Session: ${sessionIcons[sessionMode]}`, callback_data: 'cmd:session' },
       { text: sessionMode === 'demand' ? '● demand' : 'demand', callback_data: 'qset:session:demand' },
       { text: sessionMode === 'session' ? '● session' : 'session', callback_data: 'qset:session:session' }
     ],
     // Permission row
     [
-      { text: `Mode: ${permIcons[permMode]}`, callback_data: 'noop' },
+      { text: `Mode: ${permIcons[permMode]}`, callback_data: 'cmd:mode' },
       { text: permMode === 'default' ? '●' : '🔒', callback_data: 'qset:perm:default' },
       { text: permMode === 'fast' ? '●' : '⚡', callback_data: 'qset:perm:fast' },
       { text: permMode === 'plan' ? '●' : '📋', callback_data: 'qset:perm:plan' },
@@ -375,7 +395,7 @@ function sendQuickSettings(bot, chatId, messageId = null) {
     ],
     // Interactive row
     [
-      { text: `Interactive: ${interactiveIcons[interactive]}`, callback_data: 'noop' },
+      { text: `Interactive: ${interactiveIcons[interactive]}`, callback_data: 'cmd:interactive' },
       { text: interactive === 'off' ? '● off' : 'off', callback_data: 'qset:interactive:off' },
       { text: interactive === 'on' ? '● on' : 'on', callback_data: 'qset:interactive:on' }
     ],
@@ -488,68 +508,33 @@ bot.onText(/\/reset/, async (msg) => {
   if (!isAuthorized(msg)) return;
 
   const chatId = msg.chat.id;
-  const userState = getUserState(chatId);
 
-  // Kill any running Claude process
-  if (userState.interactiveProc) {
-    try { userState.interactiveProc.kill(); } catch (e) {}
-  }
-  if (userState.currentClaudeProc) {
-    try { userState.currentClaudeProc.kill(); } catch (e) {}
-  }
-
-  // Clear all runtime state
-  userState.isProcessing = false;
-  userState.currentClaudeProc = null;
-  userState.interactiveProc = null;
-  userState.pendingMessage = null;
-  userState.interactiveThinkingMsgId = null;
-  userState.interactiveStartTime = null;
-  userState.interactiveToolsUsed = [];
-  userState.interactiveTimerInterval = null;
-  userState.interactiveSessionId = null;
-
-  // Clear session history for this user
-  const { clearSession, clearHistory } = require('./lib/sessions');
-  clearSession(chatId);
-  clearHistory(chatId);
+  // Use the central reset function
+  resetUserRuntime(chatId, { killProc: true, clearSessions: true });
 
   await bot.sendMessage(chatId, '🔄 State reset! Send a message to start fresh.');
 });
 
 // ===== Restart command =====
-bot.onText(/\/restart/, async (msg) => {
+// /restart - keeps session for auto-resume
+// /restart clean - clears everything including sessions
+bot.onText(/\/restart(?:\s+(clean))?/, async (msg, match) => {
   if (!isAuthorized(msg)) return;
 
   const chatId = msg.chat.id;
-  await bot.sendMessage(chatId, '🔄 Restarting bot...');
+  const cleanMode = match[1] === 'clean';
 
-  // Clear runtime state for ALL users before restart
-  const allStates = getAllUserStates();
-  for (const [id, userState] of allStates) {
-    // Kill any running processes
-    if (userState.interactiveProc) {
-      try { userState.interactiveProc.kill(); } catch (e) {}
-    }
-    if (userState.currentClaudeProc) {
-      try { userState.currentClaudeProc.kill(); } catch (e) {}
-    }
-    // Clear runtime state
-    userState.isProcessing = false;
-    userState.currentClaudeProc = null;
-    userState.interactiveProc = null;
-    userState.pendingMessage = null;
-    userState.interactiveThinkingMsgId = null;
-    userState.interactiveStartTime = null;
-    userState.interactiveToolsUsed = [];
-    userState.interactiveTimerInterval = null;
-    userState.interactiveSessionId = null;
+  if (cleanMode) {
+    await bot.sendMessage(chatId, '🔄 Restarting bot (clean - clearing all sessions)...');
+    resetAllUsersRuntime({ killProc: true, clearSessions: true, keepSessionId: false });
+    // Clear sessions file
+    try { fs.writeFileSync(path.join(__dirname, 'data', 'sessions.json'), '{}'); } catch (e) {}
+  } else {
+    await bot.sendMessage(chatId, '🔄 Restarting bot (keeping session for resume)...');
+    resetAllUsersRuntime({ killProc: true, clearSessions: false, keepSessionId: true });
   }
 
-  // Clear all session histories
-  fs.writeFileSync(path.join(__dirname, 'data', 'sessions.json'), '{}');
-
-  // Save clean state
+  // Save state before restart
   saveNow();
 
   // Save chat ID for restart notification
@@ -759,7 +744,7 @@ bot.on('callback_query', async (query) => {
   if (navigationCommands.handleCallback(bot, query, userState)) return;
   if (gitCommands.handleCallback(bot, query, userState)) return;
   if (voiceCommands.handleCallback(bot, query, userState)) return;
-  if (claudeCommands.handleCallback(bot, query, userState)) return;
+  if (await claudeCommands.handleCallback(bot, query, userState)) return;  // async handler needs await
   if (parallelCommands.handleCallback(bot, query, userState)) return;
 
   // Handle quick settings callbacks
@@ -787,6 +772,14 @@ bot.on('callback_query', async (query) => {
       if (value === 'off' && userState.interactiveProc) {
         claudeCommands.stopInteractiveSession(userState);
       }
+      scheduleSave();
+    } else if (setting === 'txtstyle') {
+      if (!userState.voiceSettings) userState.voiceSettings = {};
+      userState.voiceSettings.textStyle = value;
+      scheduleSave();
+    } else if (setting === 'vocstyle') {
+      if (!userState.voiceSettings) userState.voiceSettings = {};
+      userState.voiceSettings.responseLevel = value;
       scheduleSave();
     }
 

@@ -11,6 +11,8 @@ const {
   GOOGLE_VOICE_OPTIONS,
   SPEED_OPTIONS,
   GOOGLE_SPEED_OPTIONS,
+  TEXT_STYLE_OPTIONS,
+  VOICE_STYLE_OPTIONS,
   RESPONSE_STYLE_OPTIONS
 } = require('../config');
 
@@ -111,10 +113,16 @@ function register(bot, isAuthorized) {
     sendSpeedMenu(bot, msg.chat.id, getUserState(msg.chat.id));
   });
 
-  // /voiceresponse - change response style
-  bot.onText(/\/voiceresponse/, (msg) => {
+  // /voiceresponse or /voicestyle - change voice response style (for auto voice)
+  bot.onText(/\/(voiceresponse|voicestyle)/, (msg) => {
     if (!isAuthorized(msg)) return;
-    sendResponseStyleMenu(bot, msg.chat.id, getUserState(msg.chat.id));
+    sendVoiceStyleMenu(bot, msg.chat.id, getUserState(msg.chat.id));
+  });
+
+  // /textstyle - change text response style (for non-voice)
+  bot.onText(/\/textstyle/, (msg) => {
+    if (!isAuthorized(msg)) return;
+    sendTextStyleMenu(bot, msg.chat.id, getUserState(msg.chat.id));
   });
 
   // /voicechunk - change chunk preset
@@ -205,21 +213,46 @@ function sendSpeedMenu(bot, chatId, userState) {
 }
 
 /**
- * Send response style menu
+ * Send voice style menu (for auto voice mode)
  */
-function sendResponseStyleMenu(bot, chatId, userState) {
+function sendVoiceStyleMenu(bot, chatId, userState) {
   const keyboard = [];
-  for (const r of RESPONSE_STYLE_OPTIONS) {
+  for (const r of VOICE_STYLE_OPTIONS) {
     const check = userState.voiceSettings.responseLevel === r.id ? '✓ ' : '';
-    keyboard.push([{ text: `${check}${r.name}`, callback_data: `response:${r.id}` }]);
+    keyboard.push([{ text: `${check}${r.name}`, callback_data: `voicestyle:${r.id}` }]);
   }
 
-  const currentStyle = RESPONSE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.name || userState.voiceSettings.responseLevel;
+  const currentStyle = VOICE_STYLE_OPTIONS.find(r => r.id === userState.voiceSettings.responseLevel)?.name || userState.voiceSettings.responseLevel;
 
   bot.sendMessage(chatId,
-    `🎭 *Voice Response Style*\n\nCurrent: *${currentStyle}*\n\nThis affects how Claude responds when voice is enabled.`,
+    `🎙 *Voice Response Style*\n\nCurrent: *${currentStyle}*\n\nThis affects how Claude responds when voice is set to AUTO.\nOptimized for spoken output - no code, no emojis, natural speech.`,
     { parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } }
   );
+}
+
+/**
+ * Send text style menu (for regular text responses)
+ */
+function sendTextStyleMenu(bot, chatId, userState) {
+  const keyboard = [];
+  const currentTextStyle = userState.voiceSettings.textStyle || 'off';
+
+  for (const t of TEXT_STYLE_OPTIONS) {
+    const check = currentTextStyle === t.id ? '✓ ' : '';
+    keyboard.push([{ text: `${check}${t.name}`, callback_data: `textstyle:${t.id}` }]);
+  }
+
+  const currentName = TEXT_STYLE_OPTIONS.find(t => t.id === currentTextStyle)?.name || currentTextStyle;
+
+  bot.sendMessage(chatId,
+    `📝 *Text Response Style*\n\nCurrent: *${currentName}*\n\nThis affects how Claude responds for regular text messages.\nUsed when voice is OFF or ON (button mode).`,
+    { parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } }
+  );
+}
+
+// Keep for backwards compatibility
+function sendResponseStyleMenu(bot, chatId, userState) {
+  sendVoiceStyleMenu(bot, chatId, userState);
 }
 
 /**
@@ -360,14 +393,25 @@ function handleCallback(bot, query, userState) {
     return true;
   }
 
-  // Response style selection
-  if (data.startsWith('response:')) {
-    const styleId = data.substring(9);
+  // Voice style selection (for auto voice mode)
+  if (data.startsWith('voicestyle:') || data.startsWith('response:')) {
+    const styleId = data.startsWith('voicestyle:') ? data.substring(11) : data.substring(9);
     userState.voiceSettings.responseLevel = styleId;
     scheduleSave();
-    const styleName = RESPONSE_STYLE_OPTIONS.find(r => r.id === styleId)?.name || styleId;
-    bot.answerCallbackQuery(query.id, { text: `✅ Style: ${styleName}` });
-    bot.sendMessage(chatId, `🎭 Response style set to *${styleName}*`, { parse_mode: 'Markdown' });
+    const styleName = VOICE_STYLE_OPTIONS.find(r => r.id === styleId)?.name || styleId;
+    bot.answerCallbackQuery(query.id, { text: `✅ Voice: ${styleName}` });
+    bot.sendMessage(chatId, `🎙 Voice style set to *${styleName}*`, { parse_mode: 'Markdown' });
+    return true;
+  }
+
+  // Text style selection (for regular text)
+  if (data.startsWith('textstyle:')) {
+    const styleId = data.substring(10);
+    userState.voiceSettings.textStyle = styleId;
+    scheduleSave();
+    const styleName = TEXT_STYLE_OPTIONS.find(t => t.id === styleId)?.name || styleId;
+    bot.answerCallbackQuery(query.id, { text: `✅ Text: ${styleName}` });
+    bot.sendMessage(chatId, `📝 Text style set to *${styleName}*`, { parse_mode: 'Markdown' });
     return true;
   }
 
@@ -426,9 +470,15 @@ function handleCallback(bot, query, userState) {
     return true;
   }
 
-  if (data === 'cmd:voiceresponse') {
-    bot.answerCallbackQuery(query.id, { text: '/voiceresponse' });
-    sendResponseStyleMenu(bot, chatId, userState);
+  if (data === 'cmd:voiceresponse' || data === 'cmd:voicestyle') {
+    bot.answerCallbackQuery(query.id, { text: '/voicestyle' });
+    sendVoiceStyleMenu(bot, chatId, userState);
+    return true;
+  }
+
+  if (data === 'cmd:textstyle') {
+    bot.answerCallbackQuery(query.id, { text: '/textstyle' });
+    sendTextStyleMenu(bot, chatId, userState);
     return true;
   }
 
@@ -446,6 +496,8 @@ module.exports = {
   handleCallback,
   sendVoiceSettingsMenu,
   sendSpeedMenu,
-  sendResponseStyleMenu,
+  sendVoiceStyleMenu,
+  sendTextStyleMenu,
+  sendResponseStyleMenu,  // backwards compatibility
   sendChunkPresetMenu
 };

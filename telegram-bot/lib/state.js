@@ -101,7 +101,7 @@ function loadUserStates() {
             ...DEFAULT_VOICE_SETTINGS,
             ...(state.voiceSettings || {})
           },
-          // Reset ALL runtime-only state on load
+          // Reset runtime-only state on load (but keep interactiveSessionId for resume!)
           isProcessing: false,
           currentClaudeProc: null,
           interactiveProc: null,
@@ -111,7 +111,8 @@ function loadUserStates() {
           interactiveStartTime: null,
           interactiveToolsUsed: [],
           interactiveTimerInterval: null,
-          interactiveSessionId: null,
+          // KEEP interactiveSessionId from saved state for auto-resume
+          interactiveSessionId: state.interactiveSessionId || null,
           messageQueue: []
         };
 
@@ -179,7 +180,7 @@ function saveUserStates() {
     };
 
     for (const [chatId, state] of userStates) {
-      // Don't persist runtime-only fields
+      // Don't persist runtime-only fields (but KEEP interactiveSessionId for resume!)
       const {
         isProcessing,
         currentClaudeProc,
@@ -190,7 +191,7 @@ function saveUserStates() {
         interactiveStartTime,
         interactiveToolsUsed,
         interactiveTimerInterval,
-        interactiveSessionId,
+        // interactiveSessionId is KEPT for auto-resume after restart
         messageQueue,
         ...persistableState
       } = state;
@@ -235,6 +236,73 @@ function saveNow() {
   }
   saveUserStates();
   saveProjects();
+}
+
+/**
+ * Reset ALL runtime state for a user - COMPLETE cleanup
+ * Call this when things are stuck or before restart
+ *
+ * Options:
+ * - killProc: kill running Claude processes (default: true)
+ * - clearSessions: clear session history (default: true)
+ * - keepSessionId: keep interactiveSessionId for auto-resume (default: false)
+ */
+function resetUserRuntime(chatId, options = {}) {
+  const state = getUserState(chatId);
+  const { killProc = true, clearSessions = true, keepSessionId = false } = options;
+
+  console.log(`🔄 [resetUserRuntime] Resetting user ${chatId} (keepSessionId: ${keepSessionId})`);
+
+  // Kill any running Claude processes
+  if (killProc) {
+    if (state.interactiveProc) {
+      console.log(`   Killing interactiveProc PID: ${state.interactiveProc.pid}`);
+      try { state.interactiveProc.kill('SIGKILL'); } catch (e) {}
+    }
+    if (state.currentClaudeProc) {
+      console.log(`   Killing currentClaudeProc PID: ${state.currentClaudeProc.pid}`);
+      try { state.currentClaudeProc.kill('SIGKILL'); } catch (e) {}
+    }
+  }
+
+  // Clear timer if running
+  if (state.interactiveTimerInterval) {
+    clearInterval(state.interactiveTimerInterval);
+  }
+
+  // Save sessionId if keeping
+  const savedSessionId = keepSessionId ? state.interactiveSessionId : null;
+
+  // Reset ALL runtime fields
+  state.isProcessing = false;
+  state.currentClaudeProc = null;
+  state.interactiveProc = null;
+  state.pendingMessage = null;
+  state.interactiveThinkingMsgId = null;
+  state.interactiveStartTime = null;
+  state.interactiveToolsUsed = [];
+  state.interactiveTimerInterval = null;
+  state.interactiveSessionId = savedSessionId;  // Restore if keeping
+  state.messageQueue = [];
+
+  // Clear sessions if requested
+  if (clearSessions && sessionsModule) {
+    sessionsModule.clearSession(chatId);
+    sessionsModule.clearHistory(chatId);
+  }
+
+  console.log(`   ✓ Runtime state reset complete${savedSessionId ? ` (kept session: ${savedSessionId.substring(0, 8)}...)` : ''}`);
+  return state;
+}
+
+/**
+ * Reset ALL users' runtime state
+ */
+function resetAllUsersRuntime(options = {}) {
+  console.log(`🔄 [resetAllUsersRuntime] Resetting all ${userStates.size} users (keepSessionId: ${options.keepSessionId || false})`);
+  for (const [chatId] of userStates) {
+    resetUserRuntime(chatId, options);
+  }
 }
 
 // ===== Project Management =====
@@ -339,6 +407,10 @@ module.exports = {
   scheduleSave,
   setSessionsModule,
   restoreActiveSessions,
+
+  // Reset/cleanup
+  resetUserRuntime,
+  resetAllUsersRuntime,
 
   // Projects
   getProjects,

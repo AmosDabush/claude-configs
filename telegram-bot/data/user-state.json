@@ -18,11 +18,13 @@
         "googleHebrewTld": "co.il",
         "googleSlow": false,
         "responseLevel": "very_casual",
+        "textStyle": "off",
         "chunkPreset": "medium"
       },
       "interactiveMode": true,
       "showTerminal": true,
-      "thoughtMode": "off"
+      "thoughtMode": "off",
+      "interactiveSessionId": null
     },
     "8046123315": {
       "currentProject": "home",
@@ -42,12 +44,15 @@
         "googleHebrewTld": "co.il",
         "googleSlow": false,
         "responseLevel": "very_casual",
+        "textStyle": "off",
         "chunkPreset": "medium"
       },
       "interactiveMode": true,
       "showTerminal": true,
-      "thoughtMode": "on"
+      "thoughtMode": "on",
+      "interactiveSessionId": "6429bb67-0fb3-4467-9710-02fa79bcf8f8",
+      "voiceEnabled": true
     }
   },
-  "savedAt": "2025-12-27T14:41:33.798Z"
+  "savedAt": "2025-12-27T15:55:18.439Z"
 }
