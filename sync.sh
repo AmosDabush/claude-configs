@@ -101,6 +101,16 @@ if [ -d "$CLAUDE_DIR/telegram-bot" ]; then
     echo "✓ telegram-bot/"
 fi
 
+# Sync hours_logs_moh/ (work hours tracking)
+HOURS_DIR="$HOME/hours_logs_moh"
+if [ -d "$HOURS_DIR" ]; then
+    mkdir -p "$REPO_DIR/hours_logs_moh"
+    rsync -a \
+        --exclude='archive' \
+        "$HOURS_DIR/" "$REPO_DIR/hours_logs_moh/"
+    echo "✓ hours_logs_moh/"
+fi
+
 echo ""
 echo "Done! Now you can:"
 echo "  cd $REPO_DIR"
